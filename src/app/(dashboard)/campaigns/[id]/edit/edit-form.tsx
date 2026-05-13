@@ -18,7 +18,9 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
 
     const [title, setTitle] = useState(campaign.title);
     const [description, setDescription] = useState(campaign.description ?? "");
-    const [eventDate, setEventDate] = useState(toDateInputValue(campaign.startsAt));
+    const [eventDate, setEventDate] = useState(
+        toDateInputValue(campaign.startsAt),
+    );
     const [bannerPreview, setBannerPreview] = useState<string | null>(
         campaign.bannerUrl && !campaign.bannerUrl.startsWith("local://")
             ? campaign.bannerUrl
@@ -58,8 +60,12 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
                 body: JSON.stringify({
                     title,
                     description: description || null,
-                    startsAt: eventDate ? new Date(eventDate).toISOString() : null,
-                    endsAt: eventDate ? new Date(eventDate).toISOString() : null,
+                    startsAt: eventDate
+                        ? new Date(eventDate).toISOString()
+                        : null,
+                    endsAt: eventDate
+                        ? new Date(eventDate).toISOString()
+                        : null,
                     bannerUrl: bannerFile
                         ? `local://${bannerFile.name}`
                         : campaign.bannerUrl,
@@ -73,7 +79,9 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
             router.push("/campaigns");
             router.refresh();
         } catch (e) {
-            setError(e instanceof Error ? e.message : "เกิดข้อผิดพลาดระหว่างบันทึก");
+            setError(
+                e instanceof Error ? e.message : "เกิดข้อผิดพลาดระหว่างบันทึก",
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -88,7 +96,9 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
             )}
 
             <section className="space-y-4 rounded-[16px] border border-slate-200 bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-bold text-slate-900">Event details</h2>
+                <h2 className="text-lg font-bold text-slate-900">
+                    Event details
+                </h2>
 
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-1.5 md:col-span-2">
@@ -148,7 +158,9 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
                                 type="file"
                                 accept="image/*"
                                 className="hidden"
-                                onChange={(e) => onBannerChange(e.target.files?.[0] ?? null)}
+                                onChange={(e) =>
+                                    onBannerChange(e.target.files?.[0] ?? null)
+                                }
                             />
                         </label>
                     ) : (
@@ -163,7 +175,8 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
                             <button
                                 type="button"
                                 onClick={() => {
-                                    if (bannerFile && bannerPreview) URL.revokeObjectURL(bannerPreview);
+                                    if (bannerFile && bannerPreview)
+                                        URL.revokeObjectURL(bannerPreview);
                                     setBannerFile(null);
                                     setBannerPreview(null);
                                 }}

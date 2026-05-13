@@ -1,5 +1,8 @@
 import { db } from "@/lib/db";
-import type { CreateCampaignInput, UpdateCampaignInput } from "@/lib/validations";
+import type {
+    CreateCampaignInput,
+    UpdateCampaignInput,
+} from "@/lib/validations";
 
 export type CampaignSummary = {
     id: string;

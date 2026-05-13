@@ -81,7 +81,10 @@ export default function NewCampaignPage() {
         const hasParticipants = participants.length > 0;
         const hasPrize = prizeTiers.length > 0;
         const allPrizeValid = prizeTiers.every(
-            (tier) => !!tier.tierName.trim() && tier.quantity !== "" && tier.quantity >= 1,
+            (tier) =>
+                !!tier.tierName.trim() &&
+                tier.quantity !== "" &&
+                tier.quantity >= 1,
         );
 
         return (
@@ -182,7 +185,10 @@ export default function NewCampaignPage() {
 
         if (
             prizeTiers.some(
-                (tier) => !tier.tierName.trim() || tier.quantity === "" || tier.quantity < 1,
+                (tier) =>
+                    !tier.tierName.trim() ||
+                    tier.quantity === "" ||
+                    tier.quantity < 1,
             )
         ) {
             setError("กรุณากรอกข้อมูล prize tier ให้ครบถ้วน");
@@ -325,7 +331,8 @@ export default function NewCampaignPage() {
                         Event Banner
                     </label>
                     <p className="text-xs text-slate-500">
-                        Recommended: 1440 × 265 px, PNG or JPG, Max 5 MB. Displayed at the top of the draw screen.
+                        Recommended: 1440 × 265 px, PNG or JPG, Max 5 MB.
+                        Displayed at the top of the draw screen.
                     </p>
                     {!bannerPreview ? (
                         <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[8px] border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center">
@@ -378,7 +385,10 @@ export default function NewCampaignPage() {
                         <span className="font-bold text-slate-500">02</span>{" "}
                         <span className="font-bold">Participants</span>
                     </h2>
-                    <p className="text-xs text-slate-500">Upload a CSV file. Required columns: employee_id, name, mobile</p>
+                    <p className="text-xs text-slate-500">
+                        Upload a CSV file. Required columns: employee_id, name,
+                        mobile
+                    </p>
                 </div>
                 {!participantFileName ? (
                     <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[8px] border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center">
@@ -402,38 +412,38 @@ export default function NewCampaignPage() {
                     </label>
                 ) : (
                     <div className="w-full md:w-1/2">
-                    <div className="rounded-[12px] border border-emerald-400/70 bg-emerald-50/50 p-3">
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-[10px] bg-emerald-600 text-white">
-                                    <FileText className="h-6 w-6" />
+                        <div className="rounded-[12px] border border-emerald-400/70 bg-emerald-50/50 p-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-[10px] bg-emerald-600 text-white">
+                                        <FileText className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <p className="text-base font-semibold leading-none text-slate-800">
+                                            {participantFileName}
+                                        </p>
+                                        <p className="mt-1 text-sm text-slate-500">
+                                            {participantFileSize
+                                                ? `${(participantFileSize / 1024).toFixed(1)} KB`
+                                                : "-"}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-base font-semibold leading-none text-slate-800">
-                                        {participantFileName}
-                                    </p>
-                                    <p className="mt-1 text-sm text-slate-500">
-                                        {participantFileSize
-                                            ? `${(participantFileSize / 1024).toFixed(1)} KB`
-                                            : "-"}
-                                    </p>
-                                </div>
+                                <label className="cursor-pointer text-sm font-medium text-emerald-700 hover:text-emerald-800">
+                                    Replace
+                                    <input
+                                        type="file"
+                                        accept=".csv,text/csv"
+                                        className="hidden"
+                                        onChange={(e) =>
+                                            void onParticipantFileChange(
+                                                e.target.files?.[0] ?? null,
+                                            )
+                                        }
+                                    />
+                                </label>
                             </div>
-                            <label className="cursor-pointer text-sm font-medium text-emerald-700 hover:text-emerald-800">
-                                Replace
-                                <input
-                                    type="file"
-                                    accept=".csv,text/csv"
-                                    className="hidden"
-                                    onChange={(e) =>
-                                        void onParticipantFileChange(
-                                            e.target.files?.[0] ?? null,
-                                        )
-                                    }
-                                />
-                            </label>
                         </div>
-                    </div>
                     </div>
                 )}
             </section>
@@ -445,7 +455,9 @@ export default function NewCampaignPage() {
                             <span className="font-bold text-slate-500">03</span>{" "}
                             <span className="font-bold">Prizes</span>
                         </h2>
-                        <p className="text-xs text-slate-500">Up to 5 prize tiers</p>
+                        <p className="text-xs text-slate-500">
+                            Up to 5 prize tiers
+                        </p>
                     </div>
                     <button
                         type="button"
@@ -513,7 +525,9 @@ export default function NewCampaignPage() {
                                             updatePrizeTier(
                                                 tier.id,
                                                 "quantity",
-                                                e.target.value === "" ? "" : Number(e.target.value),
+                                                e.target.value === ""
+                                                    ? ""
+                                                    : Number(e.target.value),
                                             )
                                         }
                                     />
