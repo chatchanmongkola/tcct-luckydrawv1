@@ -25,7 +25,9 @@ export const createCampaignSchema = z.object({
     startsAt: z.string().optional().nullable(),
     endsAt: z.string().optional().nullable(),
     participants: z.array(participantImportSchema).default([]),
-    prizeTiers: z.array(prizeTierSchema).max(5, "เพิ่ม tier ได้สูงสุด 5 รายการ"),
+    prizeTiers: z
+        .array(prizeTierSchema)
+        .max(5, "เพิ่ม tier ได้สูงสุด 5 รายการ"),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

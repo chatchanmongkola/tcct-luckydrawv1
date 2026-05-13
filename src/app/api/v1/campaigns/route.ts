@@ -20,7 +20,9 @@ export async function POST(request: Request) {
         const parsed = createCampaignSchema.safeParse(json);
 
         if (!parsed.success) {
-            return fail("ข้อมูลไม่ถูกต้อง", "VALIDATION_ERROR", { status: 400 });
+            return fail("ข้อมูลไม่ถูกต้อง", "VALIDATION_ERROR", {
+                status: 400,
+            });
         }
 
         const campaign = await createCampaign(parsed.data);

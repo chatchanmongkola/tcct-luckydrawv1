@@ -26,13 +26,17 @@ function parseCsv(text: string): ParticipantRow[] {
 
     if (lines.length < 2) return [];
 
-    const headers = lines[0].split(",").map((item) => item.trim().toLowerCase());
+    const headers = lines[0]
+        .split(",")
+        .map((item) => item.trim().toLowerCase());
     if (headers.join(",") !== "employee_id,name,mobile") {
         throw new Error("CSV header ต้องเป็น employee_id,name,mobile");
     }
 
     return lines.slice(1).map((line) => {
-        const [employee_id, name, mobile] = line.split(",").map((item) => item.trim());
+        const [employee_id, name, mobile] = line
+            .split(",")
+            .map((item) => item.trim());
         return {
             employee_id,
             name,
@@ -48,15 +52,22 @@ export default function NewCampaignPage() {
     const [eventDate, setEventDate] = useState("");
     const [bannerFile, setBannerFile] = useState<File | null>(null);
     const [bannerPreview, setBannerPreview] = useState<string | null>(null);
-    const [participantFileName, setParticipantFileName] = useState<string | null>(null);
-    const [participantFileSize, setParticipantFileSize] = useState<number | null>(null);
+    const [participantFileName, setParticipantFileName] = useState<
+        string | null
+    >(null);
+    const [participantFileSize, setParticipantFileSize] = useState<
+        number | null
+    >(null);
     const [participants, setParticipants] = useState<ParticipantRow[]>([]);
     const [prizeTiers, setPrizeTiers] = useState<PrizeTierRow[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const stats = useMemo(() => {
-        const totalPrize = prizeTiers.reduce((sum, tier) => sum + tier.quantity, 0);
+        const totalPrize = prizeTiers.reduce(
+            (sum, tier) => sum + tier.quantity,
+            0,
+        );
         return {
             participants: participants.length,
             totalPrize,
@@ -73,7 +84,13 @@ export default function NewCampaignPage() {
             (tier) => !!tier.tierName.trim() && tier.quantity >= 1,
         );
 
-        return hasTitle && hasEventDate && hasParticipants && hasPrize && allPrizeValid;
+        return (
+            hasTitle &&
+            hasEventDate &&
+            hasParticipants &&
+            hasPrize &&
+            allPrizeValid
+        );
     }, [title, eventDate, participants.length, prizeTiers]);
 
     const onBannerChange = (file: File | null) => {
@@ -102,7 +119,9 @@ export default function NewCampaignPage() {
             setParticipantFileSize(file.size);
             setError(null);
         } catch (e) {
-            setError(e instanceof Error ? e.message : "ไม่สามารถอ่านไฟล์ CSV ได้");
+            setError(
+                e instanceof Error ? e.message : "ไม่สามารถอ่านไฟล์ CSV ได้",
+            );
         }
     };
 
@@ -124,7 +143,11 @@ export default function NewCampaignPage() {
         ]);
     };
 
-    const updatePrizeTier = (id: string, field: keyof Omit<PrizeTierRow, "id">, value: string | number) => {
+    const updatePrizeTier = (
+        id: string,
+        field: keyof Omit<PrizeTierRow, "id">,
+        value: string | number,
+    ) => {
         setPrizeTiers((prev) =>
             prev.map((item) =>
                 item.id === id
@@ -132,8 +155,8 @@ export default function NewCampaignPage() {
                           ...item,
                           [field]: value,
                       }
-                    : item
-            )
+                    : item,
+            ),
         );
     };
 
@@ -157,7 +180,11 @@ export default function NewCampaignPage() {
             return;
         }
 
-        if (prizeTiers.some((tier) => !tier.tierName.trim() || tier.quantity < 1)) {
+        if (
+            prizeTiers.some(
+                (tier) => !tier.tierName.trim() || tier.quantity < 1,
+            )
+        ) {
             setError("กรุณากรอกข้อมูล prize tier ให้ครบถ้วน");
             return;
         }
@@ -174,8 +201,12 @@ export default function NewCampaignPage() {
                 body: JSON.stringify({
                     title,
                     description: description || null,
-                    startsAt: eventDate ? new Date(eventDate).toISOString() : null,
-                    endsAt: eventDate ? new Date(eventDate).toISOString() : null,
+                    startsAt: eventDate
+                        ? new Date(eventDate).toISOString()
+                        : null,
+                    endsAt: eventDate
+                        ? new Date(eventDate).toISOString()
+                        : null,
                     bannerUrl: bannerFile ? `local://${bannerFile.name}` : null,
                     participants,
                     prizeTiers: prizeTiers.map((tier, index) => ({
@@ -194,7 +225,9 @@ export default function NewCampaignPage() {
             router.push("/campaigns");
             router.refresh();
         } catch (e) {
-            setError(e instanceof Error ? e.message : "เกิดข้อผิดพลาดระหว่างบันทึก");
+            setError(
+                e instanceof Error ? e.message : "เกิดข้อผิดพลาดระหว่างบันทึก",
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -204,8 +237,12 @@ export default function NewCampaignPage() {
         <div className="mx-auto max-w-6xl space-y-6 pb-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Create Event</p>
-                    <h1 className="mt-1 text-3xl font-extrabold text-slate-950">Create Lucky Draw Event</h1>
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                        Create Event
+                    </p>
+                    <h1 className="mt-1 text-3xl font-extrabold text-slate-950">
+                        Create Lucky Draw Event
+                    </h1>
                 </div>
             </div>
 
@@ -213,21 +250,31 @@ export default function NewCampaignPage() {
                 <div className="grid gap-3 rounded-[16px] border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-3">
                     <div>
                         <p className="text-xs text-slate-400">Participants</p>
-                        <p className="text-xl font-bold text-slate-900">{stats.participants}</p>
+                        <p className="text-xl font-bold text-slate-900">
+                            {stats.participants}
+                        </p>
                     </div>
                     <div>
-                        <p className="text-xs text-slate-400">Remaining prizes</p>
-                        <p className="text-xl font-bold text-slate-900">{stats.totalPrize}</p>
+                        <p className="text-xs text-slate-400">
+                            Remaining prizes
+                        </p>
+                        <p className="text-xl font-bold text-slate-900">
+                            {stats.totalPrize}
+                        </p>
                     </div>
                     <div>
                         <p className="text-xs text-slate-400">Winners</p>
-                        <p className="text-xl font-bold text-slate-900">{stats.winners}</p>
+                        <p className="text-xl font-bold text-slate-900">
+                            {stats.winners}
+                        </p>
                     </div>
                 </div>
             )}
 
             {error && (
-                <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+                <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {error}
+                </div>
             )}
 
             <section className="space-y-4 rounded-[16px] border border-slate-200 bg-white p-5 shadow-sm">
@@ -237,7 +284,9 @@ export default function NewCampaignPage() {
                 </h2>
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-1.5 md:col-span-2">
-                        <label className="text-sm font-medium text-slate-700">Event Name</label>
+                        <label className="text-sm font-medium text-slate-700">
+                            Event Name
+                        </label>
                         <input
                             type="text"
                             value={title}
@@ -247,7 +296,9 @@ export default function NewCampaignPage() {
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-slate-700">Event Date</label>
+                        <label className="text-sm font-medium text-slate-700">
+                            Event Date
+                        </label>
                         <input
                             type="date"
                             value={eventDate}
@@ -256,7 +307,9 @@ export default function NewCampaignPage() {
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-slate-700">Description</label>
+                        <label className="text-sm font-medium text-slate-700">
+                            Description
+                        </label>
                         <input
                             type="text"
                             value={description}
@@ -268,17 +321,25 @@ export default function NewCampaignPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-slate-700">Event Banner</label>
+                    <label className="text-sm font-medium text-slate-700">
+                        Event Banner
+                    </label>
                     {!bannerPreview ? (
                         <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[8px] border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center">
                             <ImagePlus className="h-5 w-5 text-slate-500" />
-                            <span className="text-sm font-medium text-slate-700">Upload banner (PNG/JPG)</span>
-                            <span className="text-xs text-slate-500">ลากไฟล์มาวาง หรือกดเลือกไฟล์</span>
+                            <span className="text-sm font-medium text-slate-700">
+                                Upload banner (PNG/JPG)
+                            </span>
+                            <span className="text-xs text-slate-500">
+                                ลากไฟล์มาวาง หรือกดเลือกไฟล์
+                            </span>
                             <input
                                 type="file"
                                 accept="image/*"
                                 className="hidden"
-                                onChange={(e) => onBannerChange(e.target.files?.[0] ?? null)}
+                                onChange={(e) =>
+                                    onBannerChange(e.target.files?.[0] ?? null)
+                                }
                             />
                         </label>
                     ) : (
@@ -316,13 +377,21 @@ export default function NewCampaignPage() {
                 {!participantFileName ? (
                     <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[8px] border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center">
                         <Upload className="h-5 w-5 text-slate-500" />
-                        <span className="text-sm font-medium text-slate-700">Upload CSV</span>
-                        <span className="text-xs text-slate-500">header: employee_id,name,mobile</span>
+                        <span className="text-sm font-medium text-slate-700">
+                            Upload CSV
+                        </span>
+                        <span className="text-xs text-slate-500">
+                            header: employee_id,name,mobile
+                        </span>
                         <input
                             type="file"
                             accept=".csv,text/csv"
                             className="hidden"
-                            onChange={(e) => void onParticipantFileChange(e.target.files?.[0] ?? null)}
+                            onChange={(e) =>
+                                void onParticipantFileChange(
+                                    e.target.files?.[0] ?? null,
+                                )
+                            }
                         />
                     </label>
                 ) : (
@@ -337,7 +406,9 @@ export default function NewCampaignPage() {
                                         {participantFileName}
                                     </p>
                                     <p className="mt-1 text-sm text-slate-500">
-                                        {participantFileSize ? `${(participantFileSize / 1024).toFixed(1)} KB` : "-"}
+                                        {participantFileSize
+                                            ? `${(participantFileSize / 1024).toFixed(1)} KB`
+                                            : "-"}
                                     </p>
                                 </div>
                             </div>
@@ -347,7 +418,11 @@ export default function NewCampaignPage() {
                                     type="file"
                                     accept=".csv,text/csv"
                                     className="hidden"
-                                    onChange={(e) => void onParticipantFileChange(e.target.files?.[0] ?? null)}
+                                    onChange={(e) =>
+                                        void onParticipantFileChange(
+                                            e.target.files?.[0] ?? null,
+                                        )
+                                    }
                                 />
                             </label>
                         </div>
@@ -377,15 +452,26 @@ export default function NewCampaignPage() {
                 ) : (
                     <div className="space-y-3">
                         {prizeTiers.map((tier, index) => (
-                            <div key={tier.id} className="grid gap-3 rounded-[8px] border border-slate-200 p-4 md:grid-cols-12">
-                                <div className="md:col-span-1 flex items-center text-sm font-semibold text-slate-500">#{index + 1}</div>
+                            <div
+                                key={tier.id}
+                                className="grid gap-3 rounded-[8px] border border-slate-200 p-4 md:grid-cols-12"
+                            >
+                                <div className="md:col-span-1 flex items-center text-sm font-semibold text-slate-500">
+                                    #{index + 1}
+                                </div>
                                 <div className="md:col-span-3">
                                     <input
                                         type="text"
                                         value={tier.tierName}
                                         placeholder="Tier name"
                                         className="w-full rounded-[4px] border border-slate-200 px-3 py-2 text-sm"
-                                        onChange={(e) => updatePrizeTier(tier.id, "tierName", e.target.value)}
+                                        onChange={(e) =>
+                                            updatePrizeTier(
+                                                tier.id,
+                                                "tierName",
+                                                e.target.value,
+                                            )
+                                        }
                                     />
                                 </div>
                                 <div className="md:col-span-5">
@@ -394,7 +480,13 @@ export default function NewCampaignPage() {
                                         value={tier.description}
                                         placeholder="Prize description"
                                         className="w-full rounded-[4px] border border-slate-200 px-3 py-2 text-sm"
-                                        onChange={(e) => updatePrizeTier(tier.id, "description", e.target.value)}
+                                        onChange={(e) =>
+                                            updatePrizeTier(
+                                                tier.id,
+                                                "description",
+                                                e.target.value,
+                                            )
+                                        }
                                     />
                                 </div>
                                 <div className="md:col-span-2">
@@ -403,7 +495,13 @@ export default function NewCampaignPage() {
                                         min={1}
                                         value={tier.quantity}
                                         className="w-full rounded-[4px] border border-slate-200 px-3 py-2 text-sm"
-                                        onChange={(e) => updatePrizeTier(tier.id, "quantity", Number(e.target.value || 0))}
+                                        onChange={(e) =>
+                                            updatePrizeTier(
+                                                tier.id,
+                                                "quantity",
+                                                Number(e.target.value || 0),
+                                            )
+                                        }
                                     />
                                 </div>
                                 <div className="md:col-span-1">

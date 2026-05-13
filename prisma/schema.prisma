@@ -28,17 +28,17 @@ model User {
 }
 
 model Campaign {
-  id          String         @id @default(uuid()) @db.Uuid
-  title       String
-  slug        String         @unique
-  description String?
-  bannerUrl   String?        @map("banner_url")
-  status      CampaignStatus @default(DRAFT)
-  startsAt    DateTime?      @map("starts_at")
-  endsAt      DateTime?      @map("ends_at")
-  isDeleted   Boolean        @default(false) @map("is_deleted")
-  createdAt   DateTime       @default(now()) @map("created_at")
-  updatedAt   DateTime       @updatedAt @map("updated_at")
+  id           String         @id @default(uuid()) @db.Uuid
+  title        String
+  slug         String         @unique
+  description  String?
+  bannerUrl    String?        @map("banner_url")
+  status       CampaignStatus @default(DRAFT)
+  startsAt     DateTime?      @map("starts_at")
+  endsAt       DateTime?      @map("ends_at")
+  isDeleted    Boolean        @default(false) @map("is_deleted")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
   participants Participant[]
   prizeTiers   PrizeTier[]
 
@@ -46,15 +46,15 @@ model Campaign {
 }
 
 model Participant {
-  id          String   @id @default(uuid()) @db.Uuid
-  campaignId  String   @db.Uuid @map("campaign_id")
-  employeeId  String   @map("employee_id")
-  name        String
-  mobile      String
-  isDeleted   Boolean  @default(false) @map("is_deleted")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  id         String   @id @default(uuid()) @db.Uuid
+  campaignId String   @map("campaign_id") @db.Uuid
+  employeeId String   @map("employee_id")
+  name       String
+  mobile     String
+  isDeleted  Boolean  @default(false) @map("is_deleted")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@index([campaignId])
   @@map("participants")
@@ -62,7 +62,7 @@ model Participant {
 
 model PrizeTier {
   id          String   @id @default(uuid()) @db.Uuid
-  campaignId  String   @db.Uuid @map("campaign_id")
+  campaignId  String   @map("campaign_id") @db.Uuid
   tierName    String   @map("tier_name")
   description String?
   quantity    Int

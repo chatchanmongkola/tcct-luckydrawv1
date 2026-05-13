@@ -78,7 +78,9 @@ async function generateUniqueSlug(title: string): Promise<string> {
     return candidate;
 }
 
-export async function createCampaign(input: CreateCampaignInput): Promise<{ id: string; slug: string }> {
+export async function createCampaign(
+    input: CreateCampaignInput,
+): Promise<{ id: string; slug: string }> {
     const slug = await generateUniqueSlug(input.title);
 
     const created = await db.$transaction(async (tx) => {
