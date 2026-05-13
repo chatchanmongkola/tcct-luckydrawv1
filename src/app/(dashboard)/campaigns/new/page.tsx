@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, ImagePlus, Upload, X } from "lucide-react";
+import { FileText, ImagePlus, Trash2, Upload, X } from "lucide-react";
 
 type ParticipantRow = {
     employee_id: string;
@@ -15,7 +15,7 @@ type PrizeTierRow = {
     id: string;
     tierName: string;
     description: string;
-    quantity: number;
+    quantity: number | "";
 };
 
 function parseCsv(text: string): ParticipantRow[] {
@@ -65,7 +65,7 @@ export default function NewCampaignPage() {
 
     const stats = useMemo(() => {
         const totalPrize = prizeTiers.reduce(
-            (sum, tier) => sum + tier.quantity,
+            (sum, tier) => sum + (tier.quantity === "" ? 0 : tier.quantity),
             0,
         );
         return {
@@ -81,7 +81,7 @@ export default function NewCampaignPage() {
         const hasParticipants = participants.length > 0;
         const hasPrize = prizeTiers.length > 0;
         const allPrizeValid = prizeTiers.every(
-            (tier) => !!tier.tierName.trim() && tier.quantity >= 1,
+            (tier) => !!tier.tierName.trim() && tier.quantity !== "" && tier.quantity >= 1,
         );
 
         return (
@@ -182,7 +182,7 @@ export default function NewCampaignPage() {
 
         if (
             prizeTiers.some(
-                (tier) => !tier.tierName.trim() || tier.quantity < 1,
+                (tier) => !tier.tierName.trim() || tier.quantity === "" || tier.quantity < 1,
             )
         ) {
             setError("กรุณากรอกข้อมูล prize tier ให้ครบถ้วน");
@@ -212,7 +212,7 @@ export default function NewCampaignPage() {
                     prizeTiers: prizeTiers.map((tier, index) => ({
                         tierName: tier.tierName,
                         description: tier.description || null,
-                        quantity: tier.quantity,
+                        quantity: tier.quantity as number,
                         sortOrder: index + 1,
                     })),
                 }),
@@ -324,6 +324,9 @@ export default function NewCampaignPage() {
                     <label className="text-sm font-medium text-slate-700">
                         Event Banner
                     </label>
+                    <p className="text-xs text-slate-500">
+                        Recommended: 1440 × 265 px, PNG or JPG, Max 5 MB. Displayed at the top of the draw screen.
+                    </p>
                     {!bannerPreview ? (
                         <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[8px] border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center">
                             <ImagePlus className="h-5 w-5 text-slate-500" />
@@ -370,10 +373,13 @@ export default function NewCampaignPage() {
             </section>
 
             <section className="space-y-4 rounded-[16px] border border-slate-200 bg-white p-5 shadow-sm">
-                <h2 className="text-lg text-slate-900">
-                    <span className="font-bold text-slate-500">02</span>{" "}
-                    <span className="font-bold">Participants</span>
-                </h2>
+                <div>
+                    <h2 className="text-lg text-slate-900">
+                        <span className="font-bold text-slate-500">02</span>{" "}
+                        <span className="font-bold">Participants</span>
+                    </h2>
+                    <p className="text-xs text-slate-500">Upload a CSV file. Required columns: employee_id, name, mobile</p>
+                </div>
                 {!participantFileName ? (
                     <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[8px] border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center">
                         <Upload className="h-5 w-5 text-slate-500" />
@@ -395,6 +401,7 @@ export default function NewCampaignPage() {
                         />
                     </label>
                 ) : (
+                    <div className="w-full md:w-1/2">
                     <div className="rounded-[12px] border border-emerald-400/70 bg-emerald-50/50 p-3">
                         <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
@@ -427,19 +434,24 @@ export default function NewCampaignPage() {
                             </label>
                         </div>
                     </div>
+                    </div>
                 )}
             </section>
 
             <section className="space-y-4 rounded-[16px] border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-lg text-slate-900">
-                        <span className="font-bold text-slate-500">03</span>{" "}
-                        <span className="font-bold">Prizes</span>
-                    </h2>
+                    <div>
+                        <h2 className="text-lg text-slate-900">
+                            <span className="font-bold text-slate-500">03</span>{" "}
+                            <span className="font-bold">Prizes</span>
+                        </h2>
+                        <p className="text-xs text-slate-500">Up to 5 prize tiers</p>
+                    </div>
                     <button
                         type="button"
                         onClick={addPrizeTier}
-                        className="rounded-[4px] bg-secondary px-3 py-2 text-xs font-semibold text-white hover:bg-secondary/90"
+                        disabled={prizeTiers.length >= 5}
+                        className="rounded-[4px] bg-secondary px-3 py-2 text-xs font-semibold text-white hover:bg-secondary/90 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         + Add Prize
                     </button>
@@ -454,17 +466,22 @@ export default function NewCampaignPage() {
                         {prizeTiers.map((tier, index) => (
                             <div
                                 key={tier.id}
-                                className="grid gap-3 rounded-[8px] border border-slate-200 p-4 md:grid-cols-12"
+                                className="flex items-center gap-3"
                             >
-                                <div className="md:col-span-1 flex items-center text-sm font-semibold text-slate-500">
-                                    #{index + 1}
+                                {/* Number badge */}
+                                <div className="flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-[12px] bg-primary">
+                                    <span className="text-2xl font-bold text-white">
+                                        {String(index + 1).padStart(2, "0")}
+                                    </span>
                                 </div>
-                                <div className="md:col-span-3">
+
+                                {/* Gray container wrapping inputs + trash */}
+                                <div className="flex flex-1 items-center gap-2 rounded-[12px] bg-slate-100 px-3 py-3">
                                     <input
                                         type="text"
                                         value={tier.tierName}
                                         placeholder="Tier name"
-                                        className="w-full rounded-[4px] border border-slate-200 px-3 py-2 text-sm"
+                                        className="flex-[2] rounded-[6px] border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-primary"
                                         onChange={(e) =>
                                             updatePrizeTier(
                                                 tier.id,
@@ -473,13 +490,11 @@ export default function NewCampaignPage() {
                                             )
                                         }
                                     />
-                                </div>
-                                <div className="md:col-span-5">
                                     <input
                                         type="text"
                                         value={tier.description}
                                         placeholder="Prize description"
-                                        className="w-full rounded-[4px] border border-slate-200 px-3 py-2 text-sm"
+                                        className="flex-[3] rounded-[6px] border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-primary"
                                         onChange={(e) =>
                                             updatePrizeTier(
                                                 tier.id,
@@ -488,29 +503,26 @@ export default function NewCampaignPage() {
                                             )
                                         }
                                     />
-                                </div>
-                                <div className="md:col-span-2">
                                     <input
                                         type="number"
                                         min={1}
                                         value={tier.quantity}
-                                        className="w-full rounded-[4px] border border-slate-200 px-3 py-2 text-sm"
+                                        placeholder="Qty"
+                                        className="w-20 shrink-0 rounded-[6px] border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-primary"
                                         onChange={(e) =>
                                             updatePrizeTier(
                                                 tier.id,
                                                 "quantity",
-                                                Number(e.target.value || 0),
+                                                e.target.value === "" ? "" : Number(e.target.value),
                                             )
                                         }
                                     />
-                                </div>
-                                <div className="md:col-span-1">
                                     <button
                                         type="button"
                                         onClick={() => removePrizeTier(tier.id)}
-                                        className="w-full rounded-[4px] border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                                        className="shrink-0 rounded-[6px] p-2 text-slate-400 transition hover:bg-slate-200 hover:text-rose-500"
                                     >
-                                        Delete
+                                        <Trash2 className="h-4 w-4" />
                                     </button>
                                 </div>
                             </div>

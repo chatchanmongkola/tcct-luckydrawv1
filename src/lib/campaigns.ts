@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import type { CreateCampaignInput } from "@/lib/validations";
+import type { CreateCampaignInput, UpdateCampaignInput } from "@/lib/validations";
 
 export type CampaignSummary = {
     id: string;
@@ -124,4 +124,60 @@ export async function createCampaign(
     });
 
     return created;
+}
+
+export async function getCampaign(id: string): Promise<CampaignSummary | null> {
+    const campaign = await db.campaign.findFirst({
+        where: { id, isDeleted: false },
+        select: {
+            id: true,
+            title: true,
+            slug: true,
+            description: true,
+            bannerUrl: true,
+            status: true,
+            startsAt: true,
+            endsAt: true,
+            createdAt: true,
+        },
+    });
+
+    if (!campaign) return null;
+
+    return {
+        ...campaign,
+        status: campaign.status,
+        startsAt: campaign.startsAt?.toISOString() ?? null,
+        endsAt: campaign.endsAt?.toISOString() ?? null,
+        createdAt: campaign.createdAt.toISOString(),
+    };
+}
+
+export async function updateCampaign(
+    id: string,
+    input: UpdateCampaignInput,
+): Promise<{ id: string }> {
+    const updated = await db.campaign.update({
+        where: { id, isDeleted: false },
+        data: {
+            title: input.title,
+            description: input.description ?? null,
+            bannerUrl: input.bannerUrl ?? null,
+            startsAt: input.startsAt ? new Date(input.startsAt) : null,
+            endsAt: input.endsAt ? new Date(input.endsAt) : null,
+        },
+        select: { id: true },
+    });
+
+    return updated;
+}
+
+export async function deleteCampaign(id: string): Promise<{ id: string }> {
+    const updated = await db.campaign.update({
+        where: { id, isDeleted: false },
+        data: { isDeleted: true },
+        select: { id: true },
+    });
+
+    return updated;
 }

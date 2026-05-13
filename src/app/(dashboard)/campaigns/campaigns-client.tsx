@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Eye, Plus, Play, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { AlertTriangle, Eye, Loader2, Plus, Play, MoreVertical, Pencil, Trash2, X } from "lucide-react";
 
 import type { CampaignSummary } from "@/lib/campaigns";
 
@@ -12,10 +12,11 @@ type CampaignApiResponse =
 
 function formatDate(isoString: string | null) {
     if (!isoString) return "-";
-    return new Intl.DateTimeFormat("th-TH", {
+    return new Intl.DateTimeFormat("en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",
+        timeZone: "UTC",
     }).format(new Date(isoString));
 }
 
@@ -37,7 +38,13 @@ function getCardAction(campaign: CampaignSummary) {
     };
 }
 
-function CardMenu({ campaign }: { campaign: CampaignSummary }) {
+function CardMenu({
+    campaign,
+    onDeleteRequest,
+}: {
+    campaign: CampaignSummary;
+    onDeleteRequest: (campaign: CampaignSummary) => void;
+}) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -77,9 +84,7 @@ function CardMenu({ campaign }: { campaign: CampaignSummary }) {
                         type="button"
                         onClick={() => {
                             setOpen(false);
-                            window.alert(
-                                `Delete flow for ${campaign.title} will be added in Phase 6.`,
-                            );
+                            onDeleteRequest(campaign);
                         }}
                         className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
                     >
@@ -96,6 +101,11 @@ export function CampaignsClient() {
     const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Delete modal state
+    const [deleteTarget, setDeleteTarget] = useState<CampaignSummary | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const loadCampaigns = async () => {
         setIsLoading(true);
@@ -125,8 +135,91 @@ export function CampaignsClient() {
         void loadCampaigns();
     }, []);
 
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        setIsDeleting(true);
+        setDeleteError(null);
+
+        try {
+            const response = await fetch(`/api/v1/campaigns/${deleteTarget.id}`, {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                throw new Error("ไม่สามารถลบอีเวนต์ได้");
+            }
+
+            // Optimistic: remove from list immediately
+            setCampaigns((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+            setDeleteTarget(null);
+        } catch {
+            setDeleteError("ลบอีเวนต์ไม่สำเร็จ กรุณาลองใหม่");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
         <div className="space-y-8">
+            {/* Delete confirm modal */}
+            {deleteTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+                    <div className="w-full max-w-md rounded-[16px] border border-slate-200 bg-white p-6 shadow-xl">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100">
+                                <AlertTriangle className="h-5 w-5 text-rose-600" />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setDeleteTarget(null);
+                                    setDeleteError(null);
+                                }}
+                                className="text-slate-400 hover:text-slate-600"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+                        <h2 className="mt-4 text-lg font-bold text-slate-900">
+                            ลบ Event นี้?
+                        </h2>
+                        <p className="mt-1.5 text-sm text-slate-500">
+                            Event{" "}
+                            <span className="font-semibold text-slate-800">
+                                &ldquo;{deleteTarget.title}&rdquo;
+                            </span>{" "}
+                            จะถูกลบออกและไม่สามารถกู้คืนได้
+                        </p>
+                        {deleteError && (
+                            <p className="mt-3 text-sm font-medium text-rose-600">
+                                {deleteError}
+                            </p>
+                        )}
+                        <div className="mt-6 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setDeleteTarget(null);
+                                    setDeleteError(null);
+                                }}
+                                disabled={isDeleting}
+                                className="rounded-[4px] border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                            >
+                                ยกเลิก
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => void confirmDelete()}
+                                disabled={isDeleting}
+                                className="inline-flex items-center gap-2 rounded-[4px] bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
+                            >
+                                {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
+                                ลบ Event
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div className="flex items-center justify-between gap-4">
                 <div>
                     <h1 className="text-4xl font-extrabold tracking-tight text-slate-950 sm:text-5xl">
@@ -208,10 +301,10 @@ export function CampaignsClient() {
                                         </h2>
                                         <p className="mt-2 text-sm text-slate-400">
                                             Date:{" "}
-                                            {formatDate(campaign.createdAt)}
+                                            {formatDate(campaign.startsAt)}
                                         </p>
                                     </div>
-                                    <CardMenu campaign={campaign} />
+                                    <CardMenu campaign={campaign} onDeleteRequest={setDeleteTarget} />
                                 </div>
                                 <div className="h-px w-full bg-slate-200/80" />
 

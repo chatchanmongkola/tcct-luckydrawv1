@@ -30,7 +30,16 @@ export const createCampaignSchema = z.object({
         .max(5, "เพิ่ม tier ได้สูงสุด 5 รายการ"),
 });
 
+export const updateCampaignSchema = z.object({
+    title: z.string().min(1, "กรุณากรอกชื่ออีเวนต์"),
+    description: z.string().optional().nullable(),
+    bannerUrl: z.string().optional().nullable(),
+    startsAt: z.string().optional().nullable(),
+    endsAt: z.string().optional().nullable(),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ParticipantImportInput = z.infer<typeof participantImportSchema>;
 export type PrizeTierInput = z.infer<typeof prizeTierSchema>;
 export type CreateCampaignInput = z.infer<typeof createCampaignSchema>;
+export type UpdateCampaignInput = z.infer<typeof updateCampaignSchema>;
