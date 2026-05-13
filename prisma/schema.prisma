@@ -39,8 +39,41 @@ model Campaign {
   isDeleted   Boolean        @default(false) @map("is_deleted")
   createdAt   DateTime       @default(now()) @map("created_at")
   updatedAt   DateTime       @updatedAt @map("updated_at")
+  participants Participant[]
+  prizeTiers   PrizeTier[]
 
   @@map("campaigns")
+}
+
+model Participant {
+  id          String   @id @default(uuid()) @db.Uuid
+  campaignId  String   @db.Uuid @map("campaign_id")
+  employeeId  String   @map("employee_id")
+  name        String
+  mobile      String
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@map("participants")
+}
+
+model PrizeTier {
+  id          String   @id @default(uuid()) @db.Uuid
+  campaignId  String   @db.Uuid @map("campaign_id")
+  tierName    String   @map("tier_name")
+  description String?
+  quantity    Int
+  sortOrder   Int      @default(1) @map("sort_order")
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@map("prize_tiers")
 }
 
 enum CampaignStatus {
