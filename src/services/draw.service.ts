@@ -107,11 +107,7 @@ export async function getDrawState(campaignId: string): Promise<DrawOverview> {
     ]);
 
     if (!campaign) {
-        throw new DrawServiceError(
-            "CAMPAIGN_NOT_FOUND",
-            "ไม่พบแคมเปญ",
-            404,
-        );
+        throw new DrawServiceError("CAMPAIGN_NOT_FOUND", "ไม่พบแคมเปญ", 404);
     }
 
     const wonCountMap = new Map<string, number>();
@@ -132,7 +128,9 @@ export async function getDrawState(campaignId: string): Promise<DrawOverview> {
     });
 
     const currentTier = tiers.find((tier) => !tier.isComplete) ?? null;
-    const excludedWinners = await db.drawResult.count({ where: { campaignId } });
+    const excludedWinners = await db.drawResult.count({
+        where: { campaignId },
+    });
 
     return {
         campaign: {

@@ -50,7 +50,9 @@ export function DrawPanel({
     if (!tier) {
         return (
             <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-2xl font-black text-slate-900">Draw completed</h2>
+                <h2 className="text-2xl font-black text-slate-900">
+                    Draw completed
+                </h2>
                 <p className="mt-2 text-sm text-slate-500">
                     ทุกรางวัลจับครบแล้วในอีเวนต์นี้
                 </p>
@@ -64,9 +66,9 @@ export function DrawPanel({
     const statusText =
         mode === "drawing"
             ? "Drawing winners..."
-                        : tier.remaining === 0
-                ? `${tier.tierName} complete`
-                : `Ready to draw ${drawCount} winners`;
+            : tier.remaining === 0
+              ? `${tier.tierName} complete`
+              : `Ready to draw ${drawCount} winners`;
 
     const titleText =
         mode === "drawing"
@@ -83,7 +85,7 @@ export function DrawPanel({
             : mode === "drawing"
               ? "ระบบกำลังสุ่มรายชื่อผู้ชนะ"
               : mode === "result"
-                                ? ""
+                ? ""
                 : "สามารถดูรายชื่อผู้ชนะทั้งหมดของ tier นี้ได้";
 
     return (
@@ -106,9 +108,13 @@ export function DrawPanel({
                     className="mx-auto h-[100px] w-[100px]"
                     priority
                 />
-                <h2 className="mt-3 text-3xl font-black text-slate-950">{titleText}</h2>
+                <h2 className="mt-3 text-3xl font-black text-slate-950">
+                    {titleText}
+                </h2>
                 {helperText ? (
-                    <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-500">{helperText}</p>
+                    <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-500">
+                        {helperText}
+                    </p>
                 ) : null}
                 {tier.description && (
                     <p className="mx-auto mt-1 max-w-2xl text-xs text-slate-400">
@@ -118,16 +124,24 @@ export function DrawPanel({
             </div>
 
             <div className="mt-6" id="winner-capture-area">
-                <WinnerGrid winners={winners} drawCount={drawCount} mode={mode} />
+                <WinnerGrid
+                    winners={winners}
+                    drawCount={drawCount}
+                    mode={mode}
+                />
             </div>
 
             {error && (
-                <p className="mt-4 text-sm font-semibold text-rose-600">{error}</p>
+                <p className="mt-4 text-sm font-semibold text-rose-600">
+                    {error}
+                </p>
             )}
 
             <div className="mt-6 border-t border-slate-200 pt-4">
                 <div className="flex flex-wrap items-end justify-between gap-3">
-                    <p className="text-sm font-semibold text-emerald-600">• {statusText}</p>
+                    <p className="text-sm font-semibold text-emerald-600">
+                        • {statusText}
+                    </p>
 
                     <div className="flex flex-wrap items-center justify-end gap-2">
                         {tier.remaining === 0 && (
@@ -168,7 +182,9 @@ export function DrawPanel({
                             disabled={!canDraw}
                             className="inline-flex items-center gap-2 rounded-lg bg-blue-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
                         >
-                            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                            {isSubmitting && (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            )}
                             Draw {drawCount} winners
                         </button>
                     </div>

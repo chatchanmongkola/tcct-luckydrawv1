@@ -48,15 +48,15 @@ model Campaign {
 }
 
 model Participant {
-  id         String   @id @default(uuid()) @db.Uuid
-  campaignId String   @map("campaign_id") @db.Uuid
-  employeeId String   @map("employee_id")
-  name       String
-  mobile     String
-  isDeleted  Boolean  @default(false) @map("is_deleted")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  id          String       @id @default(uuid()) @db.Uuid
+  campaignId  String       @map("campaign_id") @db.Uuid
+  employeeId  String       @map("employee_id")
+  name        String
+  mobile      String
+  isDeleted   Boolean      @default(false) @map("is_deleted")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  campaign    Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   drawResults DrawResult[]
 
   @@index([campaignId])
@@ -64,16 +64,16 @@ model Participant {
 }
 
 model PrizeTier {
-  id          String   @id @default(uuid()) @db.Uuid
-  campaignId  String   @map("campaign_id") @db.Uuid
-  tierName    String   @map("tier_name")
-  description String?
-  quantity    Int
-  sortOrder   Int      @default(1) @map("sort_order")
-  isDeleted   Boolean  @default(false) @map("is_deleted")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  id           String        @id @default(uuid()) @db.Uuid
+  campaignId   String        @map("campaign_id") @db.Uuid
+  tierName     String        @map("tier_name")
+  description  String?
+  quantity     Int
+  sortOrder    Int           @default(1) @map("sort_order")
+  isDeleted    Boolean       @default(false) @map("is_deleted")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  campaign     Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   drawSessions DrawSession[]
   drawResults  DrawResult[]
 

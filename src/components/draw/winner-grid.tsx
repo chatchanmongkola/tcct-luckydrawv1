@@ -73,13 +73,19 @@ export function WinnerGrid({ winners, drawCount, mode }: WinnerGridProps) {
                               : "border-slate-200 bg-slate-50"
                     }`}
                 >
-                    <p className={`text-[11px] font-semibold uppercase tracking-wide ${winners.length ? "text-white/80" : "text-slate-500"}`}>
+                    <p
+                        className={`text-[11px] font-semibold uppercase tracking-wide ${winners.length ? "text-white/80" : "text-slate-500"}`}
+                    >
                         Slot {index + 1}
                     </p>
-                    <p className={`mt-1 text-lg font-black ${winners.length ? "text-white" : "text-slate-900"}`}>
+                    <p
+                        className={`mt-1 text-lg font-black ${winners.length ? "text-white" : "text-slate-900"}`}
+                    >
                         {winner.employeeId}
                     </p>
-                    <p className={`mt-1 truncate text-xs ${winners.length ? "text-white/80" : "text-slate-600"}`}>
+                    <p
+                        className={`mt-1 truncate text-xs ${winners.length ? "text-white/80" : "text-slate-600"}`}
+                    >
                         {winner.name}
                     </p>
                 </div>

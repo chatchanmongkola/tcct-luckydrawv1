@@ -2,7 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Eye, Loader2, Plus, Play, MoreVertical, Pencil, Trash2, X } from "lucide-react";
+import {
+    AlertTriangle,
+    Eye,
+    Loader2,
+    Plus,
+    Play,
+    MoreVertical,
+    Pencil,
+    Trash2,
+    X,
+} from "lucide-react";
 
 import type { CampaignSummary } from "@/lib/campaigns";
 
@@ -109,7 +119,9 @@ export function CampaignsClient() {
     const [error, setError] = useState<string | null>(null);
 
     // Delete modal state
-    const [deleteTarget, setDeleteTarget] = useState<CampaignSummary | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<CampaignSummary | null>(
+        null,
+    );
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -147,16 +159,21 @@ export function CampaignsClient() {
         setDeleteError(null);
 
         try {
-            const response = await fetch(`/api/v1/campaigns/${deleteTarget.id}`, {
-                method: "DELETE",
-            });
+            const response = await fetch(
+                `/api/v1/campaigns/${deleteTarget.id}`,
+                {
+                    method: "DELETE",
+                },
+            );
 
             if (!response.ok) {
                 throw new Error("ไม่สามารถลบอีเวนต์ได้");
             }
 
             // Optimistic: remove from list immediately
-            setCampaigns((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+            setCampaigns((prev) =>
+                prev.filter((c) => c.id !== deleteTarget.id),
+            );
             setDeleteTarget(null);
         } catch {
             setDeleteError("ลบอีเวนต์ไม่สำเร็จ กรุณาลองใหม่");
@@ -219,7 +236,9 @@ export function CampaignsClient() {
                                 disabled={isDeleting}
                                 className="inline-flex items-center gap-2 rounded-[4px] bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
                             >
-                                {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
+                                {isDeleting && (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                )}
                                 ลบ Event
                             </button>
                         </div>
@@ -310,25 +329,35 @@ export function CampaignsClient() {
                                             {formatDate(campaign.startsAt)}
                                         </p>
                                     </div>
-                                    <CardMenu campaign={campaign} onDeleteRequest={setDeleteTarget} />
+                                    <CardMenu
+                                        campaign={campaign}
+                                        onDeleteRequest={setDeleteTarget}
+                                    />
                                 </div>
                                 <div className="h-px w-full bg-slate-200/80" />
 
                                 <div className="grid grid-cols-3 gap-3 text-sm text-slate-700">
                                     <div>
-                                        <span className="font-medium">{campaign.participantsCount}</span>{" "}
+                                        <span className="font-medium">
+                                            {campaign.participantsCount}
+                                        </span>{" "}
                                         <span className="text-slate-500">
                                             participants
                                         </span>
                                     </div>
                                     <div>
-                                        <span className="font-medium">{campaign.prizeCount}</span>{" "}
+                                        <span className="font-medium">
+                                            {campaign.prizeCount}
+                                        </span>{" "}
                                         <span className="text-slate-500">
                                             prizes
                                         </span>
                                     </div>
                                     <div>
-                                        <span className="font-medium">{campaign.drawnCount}/{campaign.totalPrizeQuantity}</span>{" "}
+                                        <span className="font-medium">
+                                            {campaign.drawnCount}/
+                                            {campaign.totalPrizeQuantity}
+                                        </span>{" "}
                                         <span className="text-slate-500">
                                             drawn
                                         </span>

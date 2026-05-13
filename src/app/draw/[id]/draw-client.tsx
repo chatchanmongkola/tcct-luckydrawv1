@@ -75,7 +75,9 @@ export function DrawClient({
     const router = useRouter();
     const [overview, setOverview] = useState<DrawOverview | null>(null);
     const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
-    const [mode, setMode] = useState<"ready" | "drawing" | "result" | "complete">("ready");
+    const [mode, setMode] = useState<
+        "ready" | "drawing" | "result" | "complete"
+    >("ready");
     const [winners, setWinners] = useState<DrawWinner[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -92,7 +94,9 @@ export function DrawClient({
             | ApiError;
 
         if (!response.ok || !payload.success) {
-            throw new Error(payload.success ? "Draw state failed" : payload.error);
+            throw new Error(
+                payload.success ? "Draw state failed" : payload.error,
+            );
         }
 
         setOverview(payload.data);
@@ -122,7 +126,9 @@ export function DrawClient({
 
     const selectedTier = useMemo(() => {
         if (!overview || !selectedTierId) return null;
-        return overview.tiers.find((tier) => tier.id === selectedTierId) ?? null;
+        return (
+            overview.tiers.find((tier) => tier.id === selectedTierId) ?? null
+        );
     }, [overview, selectedTierId]);
 
     useEffect(() => {
@@ -159,19 +165,24 @@ export function DrawClient({
         const drawStartedAt = Date.now();
 
         try {
-            const response = await fetch(`/api/v1/campaigns/${campaignId}/draw`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
+            const response = await fetch(
+                `/api/v1/campaigns/${campaignId}/draw`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ prizeTierId: selectedTier.id }),
                 },
-                body: JSON.stringify({ prizeTierId: selectedTier.id }),
-            });
+            );
             const payload = (await response.json()) as
                 | ApiSuccess<DrawResponse>
                 | ApiError;
 
             if (!response.ok || !payload.success) {
-                throw new Error(payload.success ? "Draw failed" : payload.error);
+                throw new Error(
+                    payload.success ? "Draw failed" : payload.error,
+                );
             }
 
             const elapsed = Date.now() - drawStartedAt;
@@ -235,10 +246,14 @@ export function DrawClient({
             exportedAtIso,
         ]);
         const csvContent = [header, ...rows]
-            .map((row) => row.map((value) => `"${value.replace(/"/g, '""')}"`).join(","))
+            .map((row) =>
+                row.map((value) => `"${value.replace(/"/g, '""')}"`).join(","),
+            )
             .join("\n");
 
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const blob = new Blob([csvContent], {
+            type: "text/csv;charset=utf-8;",
+        });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
@@ -348,7 +363,9 @@ export function DrawClient({
             <main className="mx-auto mt-5 w-full max-w-6xl space-y-4 px-4">
                 {isLoading ? (
                     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <p className="text-sm text-slate-500">Loading draw state...</p>
+                        <p className="text-sm text-slate-500">
+                            Loading draw state...
+                        </p>
                     </section>
                 ) : !overview ? (
                     <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6 shadow-sm">
