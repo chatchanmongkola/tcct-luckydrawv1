@@ -24,6 +24,36 @@ async function main() {
         create: { email, username, name, password: hashed, role: "ADMIN" },
     });
 
+    await db.campaign.upsert({
+        where: { slug: "year-end-lucky-draw-2026" },
+        update: {
+            title: "Year End Lucky Draw 2026",
+            description: "แคมเปญสำหรับงานส่งท้ายปี",
+            status: "ACTIVE",
+        },
+        create: {
+            title: "Year End Lucky Draw 2026",
+            slug: "year-end-lucky-draw-2026",
+            description: "แคมเปญสำหรับงานส่งท้ายปี",
+            status: "ACTIVE",
+        },
+    });
+
+    await db.campaign.upsert({
+        where: { slug: "new-year-warmup-draw" },
+        update: {
+            title: "New Year Warmup Draw",
+            description: "เตรียมแคมเปญสำหรับเปิดปีใหม่",
+            status: "DRAFT",
+        },
+        create: {
+            title: "New Year Warmup Draw",
+            slug: "new-year-warmup-draw",
+            description: "เตรียมแคมเปญสำหรับเปิดปีใหม่",
+            status: "DRAFT",
+        },
+    });
+
     console.log(`Admin user ready: ${user.email}`);
 }
 
