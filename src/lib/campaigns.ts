@@ -14,6 +14,10 @@ export type CampaignSummary = {
     startsAt: string | null;
     endsAt: string | null;
     createdAt: string;
+    participantsCount: number;
+    prizeCount: number;
+    drawnCount: number;
+    totalPrizeQuantity: number;
 };
 
 export async function listCampaignSummaries(): Promise<CampaignSummary[]> {
@@ -30,16 +34,42 @@ export async function listCampaignSummaries(): Promise<CampaignSummary[]> {
             startsAt: true,
             endsAt: true,
             createdAt: true,
+            participants: {
+                where: { isDeleted: false },
+                select: { id: true },
+            },
+            prizeTiers: {
+                where: { isDeleted: false },
+                select: { id: true, quantity: true },
+            },
+            drawResults: {
+                select: { id: true },
+            },
         },
     });
 
-    return campaigns.map((campaign) => ({
-        ...campaign,
-        status: campaign.status,
-        startsAt: campaign.startsAt?.toISOString() ?? null,
-        endsAt: campaign.endsAt?.toISOString() ?? null,
-        createdAt: campaign.createdAt.toISOString(),
-    }));
+    return campaigns.map((campaign) => {
+        const totalPrizeQuantity = campaign.prizeTiers.reduce(
+            (sum, tier) => sum + tier.quantity,
+            0,
+        );
+
+        return {
+            id: campaign.id,
+            title: campaign.title,
+            slug: campaign.slug,
+            description: campaign.description,
+            bannerUrl: campaign.bannerUrl,
+            status: campaign.status,
+            startsAt: campaign.startsAt?.toISOString() ?? null,
+            endsAt: campaign.endsAt?.toISOString() ?? null,
+            createdAt: campaign.createdAt.toISOString(),
+            participantsCount: campaign.participants.length,
+            prizeCount: campaign.prizeTiers.length,
+            drawnCount: campaign.drawResults.length,
+            totalPrizeQuantity,
+        };
+    });
 }
 
 function toSlug(input: string): string {
@@ -142,17 +172,41 @@ export async function getCampaign(id: string): Promise<CampaignSummary | null> {
             startsAt: true,
             endsAt: true,
             createdAt: true,
+            participants: {
+                where: { isDeleted: false },
+                select: { id: true },
+            },
+            prizeTiers: {
+                where: { isDeleted: false },
+                select: { id: true, quantity: true },
+            },
+            drawResults: {
+                select: { id: true },
+            },
         },
     });
 
     if (!campaign) return null;
 
+    const totalPrizeQuantity = campaign.prizeTiers.reduce(
+        (sum, tier) => sum + tier.quantity,
+        0,
+    );
+
     return {
-        ...campaign,
+        id: campaign.id,
+        title: campaign.title,
+        slug: campaign.slug,
+        description: campaign.description,
+        bannerUrl: campaign.bannerUrl,
         status: campaign.status,
         startsAt: campaign.startsAt?.toISOString() ?? null,
         endsAt: campaign.endsAt?.toISOString() ?? null,
         createdAt: campaign.createdAt.toISOString(),
+        participantsCount: campaign.participants.length,
+        prizeCount: campaign.prizeTiers.length,
+        drawnCount: campaign.drawResults.length,
+        totalPrizeQuantity,
     };
 }
 

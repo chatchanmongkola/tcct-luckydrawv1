@@ -13,9 +13,8 @@ export const authConfig: NextAuthConfig = {
 
             const isAuthPage = pathname.startsWith("/login");
             const isApiAuth = pathname.startsWith("/api/auth");
-            const isDrawPage = pathname.startsWith("/draw/");
 
-            if (isApiAuth || isDrawPage) return true;
+            if (isApiAuth) return true;
             if (isAuthPage) return !isLoggedIn;
             return isLoggedIn;
         },

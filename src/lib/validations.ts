@@ -38,8 +38,13 @@ export const updateCampaignSchema = z.object({
     endsAt: z.string().optional().nullable(),
 });
 
+export const drawRequestSchema = z.object({
+    prizeTierId: z.string().uuid("prizeTierId ไม่ถูกต้อง"),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ParticipantImportInput = z.infer<typeof participantImportSchema>;
 export type PrizeTierInput = z.infer<typeof prizeTierSchema>;
 export type CreateCampaignInput = z.infer<typeof createCampaignSchema>;
 export type UpdateCampaignInput = z.infer<typeof updateCampaignSchema>;
+export type DrawRequestInput = z.infer<typeof drawRequestSchema>;

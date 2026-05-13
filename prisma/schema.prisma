@@ -41,6 +41,8 @@ model Campaign {
   updatedAt    DateTime       @updatedAt @map("updated_at")
   participants Participant[]
   prizeTiers   PrizeTier[]
+  drawSessions DrawSession[]
+  drawResults  DrawResult[]
 
   @@map("campaigns")
 }
@@ -55,6 +57,7 @@ model Participant {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
   campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  drawResults DrawResult[]
 
   @@index([campaignId])
   @@map("participants")
@@ -71,9 +74,46 @@ model PrizeTier {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  drawSessions DrawSession[]
+  drawResults  DrawResult[]
 
   @@index([campaignId])
   @@map("prize_tiers")
+}
+
+model DrawSession {
+  id          String       @id @default(uuid()) @db.Uuid
+  campaignId  String       @map("campaign_id") @db.Uuid
+  prizeTierId String       @map("prize_tier_id") @db.Uuid
+  state       DrawState    @default(COMPLETED)
+  nonce       String
+  drawnAt     DateTime     @default(now()) @map("drawn_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  campaign    Campaign     @relation(fields: [campaignId], references: [id])
+  prizeTier   PrizeTier    @relation(fields: [prizeTierId], references: [id])
+  results     DrawResult[]
+
+  @@index([campaignId])
+  @@index([prizeTierId])
+  @@map("draw_sessions")
+}
+
+model DrawResult {
+  id            String      @id @default(uuid()) @db.Uuid
+  campaignId    String      @map("campaign_id") @db.Uuid
+  drawSessionId String      @map("draw_session_id") @db.Uuid
+  participantId String      @map("participant_id") @db.Uuid
+  prizeTierId   String      @map("prize_tier_id") @db.Uuid
+  createdAt     DateTime    @default(now()) @map("created_at")
+  campaign      Campaign    @relation(fields: [campaignId], references: [id])
+  drawSession   DrawSession @relation(fields: [drawSessionId], references: [id])
+  participant   Participant @relation(fields: [participantId], references: [id])
+  prizeTier     PrizeTier   @relation(fields: [prizeTierId], references: [id])
+
+  @@unique([campaignId, participantId])
+  @@index([campaignId])
+  @@index([drawSessionId])
+  @@map("draw_results")
 }
 
 enum CampaignStatus {
@@ -81,4 +121,10 @@ enum CampaignStatus {
   ACTIVE
   COMPLETED
   ARCHIVED
+}
+
+enum DrawState {
+  READY
+  DRAWING
+  COMPLETED
 }

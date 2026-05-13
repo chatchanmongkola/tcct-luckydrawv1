@@ -21,11 +21,17 @@ function formatDate(isoString: string | null) {
 }
 
 function getCardAction(campaign: CampaignSummary) {
-    if (campaign.status === "COMPLETED" || campaign.status === "ARCHIVED") {
+    const isFinished =
+        campaign.status === "COMPLETED" ||
+        campaign.status === "ARCHIVED" ||
+        (campaign.totalPrizeQuantity > 0 &&
+            campaign.drawnCount >= campaign.totalPrizeQuantity);
+
+    if (isFinished) {
         return {
             label: "View History",
             icon: Eye,
-            href: "/campaigns/new",
+            href: `/draw/${campaign.id}`,
             variant: "history" as const,
         };
     }
@@ -33,7 +39,7 @@ function getCardAction(campaign: CampaignSummary) {
     return {
         label: "Open Draw",
         icon: Play,
-        href: "/campaigns/new",
+        href: `/draw/${campaign.id}`,
         variant: "draw" as const,
     };
 }
@@ -310,19 +316,19 @@ export function CampaignsClient() {
 
                                 <div className="grid grid-cols-3 gap-3 text-sm text-slate-700">
                                     <div>
-                                        <span className="font-medium">0</span>{" "}
+                                        <span className="font-medium">{campaign.participantsCount}</span>{" "}
                                         <span className="text-slate-500">
                                             participants
                                         </span>
                                     </div>
                                     <div>
-                                        <span className="font-medium">0</span>{" "}
+                                        <span className="font-medium">{campaign.prizeCount}</span>{" "}
                                         <span className="text-slate-500">
                                             prizes
                                         </span>
                                     </div>
                                     <div>
-                                        <span className="font-medium">0/0</span>{" "}
+                                        <span className="font-medium">{campaign.drawnCount}/{campaign.totalPrizeQuantity}</span>{" "}
                                         <span className="text-slate-500">
                                             drawn
                                         </span>
