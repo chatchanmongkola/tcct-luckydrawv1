@@ -8,9 +8,10 @@
         "start": "next start",
         "lint": "next lint",
         "db:migrate": "prisma migrate dev",
+        "db:migrate:deploy": "DATABASE_URL=${DIRECT_DATABASE_URL:-$DATABASE_URL} prisma migrate deploy",
         "db:seed": "prisma db seed",
         "db:studio": "prisma studio",
-        "vercel-build": "prisma generate && npm run db:migrate && npm run db:seed && next build"
+        "vercel-build": "prisma generate && npm run db:migrate:deploy && npm run db:seed && next build"
     },
     "prisma": {
         "seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts"
