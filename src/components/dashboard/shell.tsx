@@ -55,12 +55,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-3 py-1.5">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-100 text-xs font-semibold text-cyan-700">
-                            {(user.name ?? user.email ?? "A")
-                                .slice(0, 1)
-                                .toUpperCase()}
-                        </div>
+                    <div className="flex items-center gap-3 rounded-full bg-white px-3 py-1.5">
                         <div className="hidden text-right sm:block">
                             <p className="text-sm font-medium text-slate-800">
                                 {user.name ?? "Administrator"}
@@ -68,6 +63,11 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
                             <p className="text-xs text-slate-500">
                                 {user.role ?? "Admin"}
                             </p>
+                        </div>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-100 text-xs font-semibold text-cyan-700">
+                            {(user.name ?? user.email ?? "A")
+                                .slice(0, 1)
+                                .toUpperCase()}
                         </div>
                     </div>
                 </div>

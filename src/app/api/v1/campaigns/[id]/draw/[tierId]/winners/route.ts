@@ -11,7 +11,7 @@ export async function GET(_request: Request, { params }: Params) {
     } catch (error) {
         console.error("Failed to list tier winners", error);
         return fail(
-            "ไม่สามารถดึงรายชื่อผู้ชนะได้",
+            "Failed to load winners.",
             "DRAW_WINNERS_LIST_FAILED",
             {
                 status: 500,

@@ -61,6 +61,37 @@ export type ExecuteDrawResult = {
     winners: DrawWinner[];
 };
 
+export type CampaignHistoryTier = {
+    id: string;
+    tierName: string;
+    description: string | null;
+    quantity: number;
+    sortOrder: number;
+    wonCount: number;
+    isComplete: boolean;
+    winners: Array<
+        DrawWinner & {
+            drawnAt: string;
+        }
+    >;
+};
+
+export type CampaignHistory = {
+    campaign: {
+        id: string;
+        title: string;
+        bannerUrl: string | null;
+        status: string;
+    };
+    totals: {
+        participants: number;
+        tiers: number;
+        prizes: number;
+        drawn: number;
+    };
+    tiers: CampaignHistoryTier[];
+};
+
 function pickRandomDistinct<T>(items: T[], count: number): T[] {
     const pool = [...items];
     const selected: T[] = [];
@@ -107,7 +138,7 @@ export async function getDrawState(campaignId: string): Promise<DrawOverview> {
     ]);
 
     if (!campaign) {
-        throw new DrawServiceError("CAMPAIGN_NOT_FOUND", "ไม่พบแคมเปญ", 404);
+        throw new DrawServiceError("CAMPAIGN_NOT_FOUND", "Campaign not found.", 404);
     }
 
     const wonCountMap = new Map<string, number>();
@@ -156,7 +187,7 @@ export async function executeDraw(
     });
 
     if (!campaign) {
-        throw new DrawServiceError("CAMPAIGN_NOT_FOUND", "ไม่พบแคมเปญ", 404);
+        throw new DrawServiceError("CAMPAIGN_NOT_FOUND", "Campaign not found.", 404);
     }
 
     const tier = await db.prizeTier.findFirst({
@@ -170,7 +201,7 @@ export async function executeDraw(
     if (!tier) {
         throw new DrawServiceError(
             "PRIZE_TIER_NOT_FOUND",
-            "ไม่พบรางวัลที่เลือก",
+            "Selected prize tier not found.",
             404,
         );
     }
@@ -183,7 +214,7 @@ export async function executeDraw(
     if (remaining <= 0) {
         throw new DrawServiceError(
             "PRIZE_TIER_COMPLETED",
-            "รางวัลนี้จับครบแล้ว",
+            "This prize tier is already completed.",
             409,
         );
     }
@@ -213,7 +244,7 @@ export async function executeDraw(
     if (!eligibleParticipants.length) {
         throw new DrawServiceError(
             "NO_ELIGIBLE_PARTICIPANTS",
-            "ไม่มีผู้เข้าร่วมที่สุ่มได้แล้ว",
+            "No eligible participants remaining.",
             409,
         );
     }
@@ -315,4 +346,99 @@ export async function getTierWinners(
         name: item.participant.name,
         mobile: item.participant.mobile,
     }));
+}
+
+export async function getCampaignHistory(
+    campaignId: string,
+): Promise<CampaignHistory> {
+    const [campaign, participantsCount] = await Promise.all([
+        db.campaign.findFirst({
+            where: { id: campaignId, isDeleted: false },
+            select: {
+                id: true,
+                title: true,
+                bannerUrl: true,
+                status: true,
+                prizeTiers: {
+                    where: { isDeleted: false },
+                    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+                    select: {
+                        id: true,
+                        tierName: true,
+                        description: true,
+                        quantity: true,
+                        sortOrder: true,
+                    },
+                },
+                drawResults: {
+                    orderBy: [{ createdAt: "asc" }],
+                    select: {
+                        prizeTierId: true,
+                        createdAt: true,
+                        participant: {
+                            select: {
+                                id: true,
+                                employeeId: true,
+                                name: true,
+                                mobile: true,
+                            },
+                        },
+                    },
+                },
+            },
+        }),
+        db.participant.count({
+            where: { campaignId, isDeleted: false },
+        }),
+    ]);
+
+    if (!campaign) {
+        throw new DrawServiceError("CAMPAIGN_NOT_FOUND", "Campaign not found.", 404);
+    }
+
+    const winnerMap = new Map<string, CampaignHistoryTier["winners"]>();
+    for (const result of campaign.drawResults) {
+        const current = winnerMap.get(result.prizeTierId) ?? [];
+        current.push({
+            participantId: result.participant.id,
+            employeeId: result.participant.employeeId,
+            name: result.participant.name,
+            mobile: result.participant.mobile,
+            drawnAt: result.createdAt.toISOString(),
+        });
+        winnerMap.set(result.prizeTierId, current);
+    }
+
+    const tiers: CampaignHistoryTier[] = campaign.prizeTiers.map((tier) => {
+        const winners = winnerMap.get(tier.id) ?? [];
+        return {
+            id: tier.id,
+            tierName: tier.tierName,
+            description: tier.description,
+            quantity: tier.quantity,
+            sortOrder: tier.sortOrder,
+            wonCount: winners.length,
+            isComplete: winners.length >= tier.quantity,
+            winners,
+        };
+    });
+
+    const totalPrizes = tiers.reduce((sum, tier) => sum + tier.quantity, 0);
+    const totalDrawn = tiers.reduce((sum, tier) => sum + tier.wonCount, 0);
+
+    return {
+        campaign: {
+            id: campaign.id,
+            title: campaign.title,
+            bannerUrl: campaign.bannerUrl,
+            status: campaign.status,
+        },
+        totals: {
+            participants: participantsCount,
+            tiers: tiers.length,
+            prizes: totalPrizes,
+            drawn: totalDrawn,
+        },
+        tiers,
+    };
 }

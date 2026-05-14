@@ -32,7 +32,7 @@ export default function LoginForm() {
             });
 
             if (result?.error) {
-                setError("Username หรือรหัสผ่านไม่ถูกต้อง");
+                setError("Invalid username or password.");
                 return;
             }
 

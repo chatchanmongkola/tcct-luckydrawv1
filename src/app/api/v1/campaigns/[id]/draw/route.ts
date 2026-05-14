@@ -13,7 +13,7 @@ function handleDrawError(error: unknown) {
         return fail(error.message, error.code, { status: error.status });
     }
 
-    return fail("เกิดข้อผิดพลาดในระบบสุ่ม", "DRAW_INTERNAL_ERROR", {
+    return fail("Unexpected draw system error.", "DRAW_INTERNAL_ERROR", {
         status: 500,
     });
 }
@@ -36,7 +36,7 @@ export async function POST(request: Request, { params }: Params) {
         const parsed = drawRequestSchema.safeParse(body);
 
         if (!parsed.success) {
-            return fail("ข้อมูลไม่ถูกต้อง", "VALIDATION_ERROR", {
+            return fail("Invalid input.", "VALIDATION_ERROR", {
                 status: 400,
             });
         }

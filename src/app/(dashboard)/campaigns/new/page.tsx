@@ -30,7 +30,7 @@ function parseCsv(text: string): ParticipantRow[] {
         .split(",")
         .map((item) => item.trim().toLowerCase());
     if (headers.join(",") !== "employee_id,name,mobile") {
-        throw new Error("CSV header ต้องเป็น employee_id,name,mobile");
+        throw new Error("CSV header must be employee_id,name,mobile");
     }
 
     return lines.slice(1).map((line) => {
@@ -99,7 +99,7 @@ export default function NewCampaignPage() {
     const onBannerChange = (file: File | null) => {
         if (!file) return;
         if (!file.type.startsWith("image/")) {
-            setError("รองรับเฉพาะไฟล์รูปภาพเท่านั้น");
+            setError("Only image files are supported.");
             return;
         }
 
@@ -123,14 +123,14 @@ export default function NewCampaignPage() {
             setError(null);
         } catch (e) {
             setError(
-                e instanceof Error ? e.message : "ไม่สามารถอ่านไฟล์ CSV ได้",
+                e instanceof Error ? e.message : "Unable to read CSV file.",
             );
         }
     };
 
     const addPrizeTier = () => {
         if (prizeTiers.length >= 5) {
-            setError("เพิ่ม prize tier ได้สูงสุด 5 รายการ");
+            setError("You can add up to 5 prize tiers.");
             return;
         }
 
@@ -169,17 +169,17 @@ export default function NewCampaignPage() {
 
     const onSave = async () => {
         if (!title.trim()) {
-            setError("กรุณากรอกชื่อ Event");
+            setError("Please enter event name.");
             return;
         }
 
         if (!participants.length) {
-            setError("กรุณาอัปโหลด participants CSV อย่างน้อย 1 รายการ");
+            setError("Please upload at least 1 participants CSV file.");
             return;
         }
 
         if (!prizeTiers.length) {
-            setError("กรุณาเพิ่ม prize อย่างน้อย 1 รายการ");
+            setError("Please add at least 1 prize.");
             return;
         }
 
@@ -191,7 +191,7 @@ export default function NewCampaignPage() {
                     tier.quantity < 1,
             )
         ) {
-            setError("กรุณากรอกข้อมูล prize tier ให้ครบถ้วน");
+            setError("Please complete all prize tier fields.");
             return;
         }
 
@@ -225,14 +225,14 @@ export default function NewCampaignPage() {
             });
 
             if (!response.ok) {
-                throw new Error("ไม่สามารถสร้าง Event ได้");
+                throw new Error("Unable to create event.");
             }
 
             router.push("/campaigns");
             router.refresh();
         } catch (e) {
             setError(
-                e instanceof Error ? e.message : "เกิดข้อผิดพลาดระหว่างบันทึก",
+                e instanceof Error ? e.message : "An error occurred while saving.",
             );
         } finally {
             setIsSubmitting(false);
@@ -298,7 +298,7 @@ export default function NewCampaignPage() {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             className="w-full rounded-[4px] border border-slate-200 px-3 py-2.5 text-sm outline-none ring-0 transition focus:border-primary"
-                            placeholder="เช่น Year End Lucky Draw 2026"
+                            placeholder="e.g. Year End Lucky Draw 2026"
                         />
                     </div>
                     <div className="space-y-1.5">
@@ -321,7 +321,7 @@ export default function NewCampaignPage() {
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             className="w-full rounded-[4px] border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-primary"
-                            placeholder="คำอธิบายอีเวนต์"
+                            placeholder="Event description"
                         />
                     </div>
                 </div>
@@ -341,7 +341,7 @@ export default function NewCampaignPage() {
                                 Upload banner (PNG/JPG)
                             </span>
                             <span className="text-xs text-slate-500">
-                                ลากไฟล์มาวาง หรือกดเลือกไฟล์
+                                Drag and drop a file, or click to choose a file
                             </span>
                             <input
                                 type="file"

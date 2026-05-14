@@ -12,6 +12,7 @@ type DrawWinner = {
 type WinnerGridProps = {
     winners: DrawWinner[];
     drawCount: number;
+    slotStart: number;
     mode: "ready" | "drawing" | "result" | "complete";
 };
 
@@ -20,7 +21,12 @@ function randomEmployeeId() {
     return `EMP${String(value).padStart(4, "0")}`;
 }
 
-export function WinnerGrid({ winners, drawCount, mode }: WinnerGridProps) {
+export function WinnerGrid({
+    winners,
+    drawCount,
+    slotStart,
+    mode,
+}: WinnerGridProps) {
     const [rollingIds, setRollingIds] = useState<string[]>([]);
 
     useEffect(() => {
@@ -76,7 +82,7 @@ export function WinnerGrid({ winners, drawCount, mode }: WinnerGridProps) {
                     <p
                         className={`text-[11px] font-semibold uppercase tracking-wide ${winners.length ? "text-white/80" : "text-slate-500"}`}
                     >
-                        Slot {index + 1}
+                        Slot {slotStart + index}
                     </p>
                     <p
                         className={`mt-1 text-lg font-black ${winners.length ? "text-white" : "text-slate-900"}`}

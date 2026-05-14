@@ -27,6 +27,7 @@ type DrawPanelProps = {
     mode: "ready" | "drawing" | "result" | "complete";
     isSubmitting: boolean;
     winners: DrawWinner[];
+    slotStart: number;
     error: string | null;
     hasShownAllWinners: boolean;
     onDraw: () => void;
@@ -40,6 +41,7 @@ export function DrawPanel({
     mode,
     isSubmitting,
     winners,
+    slotStart,
     error,
     hasShownAllWinners,
     onDraw,
@@ -54,7 +56,7 @@ export function DrawPanel({
                     Draw completed
                 </h2>
                 <p className="mt-2 text-sm text-slate-500">
-                    ทุกรางวัลจับครบแล้วในอีเวนต์นี้
+                    All prizes in this event have been fully drawn.
                 </p>
             </section>
         );
@@ -83,10 +85,13 @@ export function DrawPanel({
         mode === "ready"
             ? `Press the button below to draw ${drawCount} winner${drawCount > 1 ? "s" : ""} for ${tier.tierName}`
             : mode === "drawing"
-              ? "ระบบกำลังสุ่มรายชื่อผู้ชนะ"
+                            ? "The system is drawing winners."
               : mode === "result"
                 ? ""
-                : "สามารถดูรายชื่อผู้ชนะทั้งหมดของ tier นี้ได้";
+                                : "You can view all winners in this tier.";
+
+        const effectiveSlotStart =
+                hasShownAllWinners && winners.length > 0 ? 1 : Math.max(1, slotStart);
 
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -127,6 +132,7 @@ export function DrawPanel({
                 <WinnerGrid
                     winners={winners}
                     drawCount={drawCount}
+                    slotStart={effectiveSlotStart}
                     mode={mode}
                 />
             </div>

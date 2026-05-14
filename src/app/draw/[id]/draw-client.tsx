@@ -83,6 +83,9 @@ export function DrawClient({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasShownAllWinners, setHasShownAllWinners] = useState(false);
+    const [currentBatchSlotStart, setCurrentBatchSlotStart] = useState<
+        number | null
+    >(null);
     const previousTierIdRef = useRef<string | null>(null);
 
     const loadState = useCallback(async () => {
@@ -115,7 +118,7 @@ export function DrawClient({
             try {
                 await loadState();
             } catch {
-                setError("โหลดข้อมูลหน้าสุ่มไม่สำเร็จ");
+                setError("Failed to load draw page data.");
             } finally {
                 setIsLoading(false);
             }
@@ -150,8 +153,33 @@ export function DrawClient({
 
         setWinners([]);
         setHasShownAllWinners(false);
+        setCurrentBatchSlotStart(null);
         setMode(tier.remaining === 0 ? "complete" : "ready");
     }, [overview, selectedTierId]);
+
+    const slotStart = useMemo(() => {
+        if (!selectedTier) return 1;
+
+        if (hasShownAllWinners && winners.length > 0) {
+            return 1;
+        }
+
+        if (currentBatchSlotStart !== null) {
+            return currentBatchSlotStart;
+        }
+
+        if (mode === "result" && winners.length > 0) {
+            return Math.max(1, selectedTier.wonCount - winners.length + 1);
+        }
+
+        return selectedTier.wonCount + 1;
+    }, [
+        currentBatchSlotStart,
+        hasShownAllWinners,
+        mode,
+        selectedTier,
+        winners.length,
+    ]);
 
     const runDraw = async () => {
         if (!selectedTier || selectedTier.remaining <= 0) return;
@@ -161,6 +189,7 @@ export function DrawClient({
         setMode("drawing");
         setWinners([]);
         setHasShownAllWinners(false);
+        setCurrentBatchSlotStart(selectedTier.wonCount + 1);
 
         const drawStartedAt = Date.now();
 
@@ -197,7 +226,8 @@ export function DrawClient({
             setMode(payload.data.remaining === 0 ? "complete" : "result");
             await loadState();
         } catch (err) {
-            setError(err instanceof Error ? err.message : "สุ่มไม่สำเร็จ");
+            setError(err instanceof Error ? err.message : "Draw failed.");
+            setCurrentBatchSlotStart(null);
             setMode("ready");
         } finally {
             setIsSubmitting(false);
@@ -226,8 +256,9 @@ export function DrawClient({
             setWinners(payload.data);
             setMode("complete");
             setHasShownAllWinners(true);
+            setCurrentBatchSlotStart(1);
         } catch {
-            setError("ไม่สามารถโหลดรายชื่อผู้ชนะทั้งหมดได้");
+            setError("Unable to load all winners.");
         }
     };
 
@@ -237,9 +268,19 @@ export function DrawClient({
         const exportedAt = new Date();
         const exportedAtIso = exportedAt.toISOString();
         const fileStamp = toTimestampForFile(exportedAt);
+        const eventTitle = overview?.campaign.title ?? "Unknown Event";
 
-        const header = ["employee_id", "name", "mobile", "exported_at"];
+        const header = [
+            "event_name",
+            "prize_tier",
+            "employee_id",
+            "name",
+            "mobile",
+            "exported_at",
+        ];
         const rows = winners.map((winner) => [
+            eventTitle,
+            selectedTier.tierName,
             winner.employeeId,
             winner.name,
             winner.mobile,
@@ -268,13 +309,14 @@ export function DrawClient({
         const exportedAt = new Date();
         const exportedAtIso = exportedAt.toISOString();
         const fileStamp = toTimestampForFile(exportedAt);
+        const eventTitle = overview?.campaign.title ?? "Unknown Event";
 
         const columns = 5;
         const cardWidth = 260;
         const cardHeight = 120;
         const gap = 20;
         const padding = 40;
-        const titleHeight = 120;
+        const titleHeight = 170;
         const rows = Math.ceil(winners.length / columns);
         const width = padding * 2 + columns * cardWidth + (columns - 1) * gap;
         const height =
@@ -293,14 +335,18 @@ export function DrawClient({
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, width, height);
 
+        ctx.fillStyle = "#334155";
+        ctx.font = "600 20px ui-sans-serif, system-ui, -apple-system";
+        ctx.fillText(`Event: ${eventTitle}`, padding, 42);
+
         ctx.fillStyle = "#0f172a";
         ctx.font = "700 42px ui-sans-serif, system-ui, -apple-system";
-        ctx.fillText(`${selectedTier.tierName} Winners`, padding, 65);
+        ctx.fillText(`${selectedTier.tierName} Winners`, padding, 88);
 
         ctx.fillStyle = "#64748b";
         ctx.font = "500 22px ui-sans-serif, system-ui, -apple-system";
-        ctx.fillText(`Total winners: ${winners.length}`, padding, 98);
-        ctx.fillText(`Exported at: ${exportedAtIso}`, padding, 124);
+        ctx.fillText(`Total winners: ${winners.length}`, padding, 122);
+        ctx.fillText(`Exported at: ${exportedAtIso}`, padding, 148);
 
         winners.forEach((winner, index) => {
             const row = Math.floor(index / columns);
@@ -370,7 +416,7 @@ export function DrawClient({
                 ) : !overview ? (
                     <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6 shadow-sm">
                         <p className="text-sm font-semibold text-rose-700">
-                            {error ?? "ไม่พบข้อมูลหน้าสุ่ม"}
+                            {error ?? "Draw page data not found."}
                         </p>
                     </section>
                 ) : (
@@ -388,6 +434,7 @@ export function DrawClient({
                             mode={mode}
                             isSubmitting={isSubmitting}
                             winners={winners}
+                            slotStart={slotStart}
                             error={error}
                             hasShownAllWinners={hasShownAllWinners}
                             onDraw={() => void runDraw()}

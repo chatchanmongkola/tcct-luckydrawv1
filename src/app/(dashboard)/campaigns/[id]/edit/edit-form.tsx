@@ -33,7 +33,7 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
     const onBannerChange = (file: File | null) => {
         if (!file) return;
         if (!file.type.startsWith("image/")) {
-            setError("รองรับเฉพาะไฟล์รูปภาพเท่านั้น");
+            setError("Only image files are supported.");
             return;
         }
         if (bannerFile && bannerPreview) {
@@ -46,7 +46,7 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
 
     const onSave = async () => {
         if (!title.trim()) {
-            setError("กรุณากรอกชื่อ Event");
+            setError("Please enter event name.");
             return;
         }
 
@@ -73,14 +73,14 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
             });
 
             if (!response.ok) {
-                throw new Error("ไม่สามารถแก้ไข Event ได้");
+                throw new Error("Unable to update event.");
             }
 
             router.push("/campaigns");
             router.refresh();
         } catch (e) {
             setError(
-                e instanceof Error ? e.message : "เกิดข้อผิดพลาดระหว่างบันทึก",
+                e instanceof Error ? e.message : "An error occurred while saving.",
             );
         } finally {
             setIsSubmitting(false);
@@ -110,7 +110,7 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             className="w-full rounded-[4px] border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-primary"
-                            placeholder="เช่น Year End Lucky Draw 2026"
+                            placeholder="e.g. Year End Lucky Draw 2026"
                         />
                     </div>
                     <div className="space-y-1.5">
@@ -133,7 +133,7 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             className="w-full rounded-[4px] border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-primary"
-                            placeholder="คำอธิบายอีเวนต์"
+                            placeholder="Event description"
                         />
                     </div>
                 </div>
@@ -152,7 +152,7 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
                                 Upload banner (PNG/JPG)
                             </span>
                             <span className="text-xs text-slate-500">
-                                ลากไฟล์มาวาง หรือกดเลือกไฟล์
+                                Drag and drop a file, or click to choose a file
                             </span>
                             <input
                                 type="file"

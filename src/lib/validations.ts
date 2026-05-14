@@ -1,25 +1,25 @@
 import { z } from "zod";
 
 export const loginSchema = z.object({
-    email: z.string().min(1, "กรุณากรอก Username"),
-    password: z.string().min(1, "กรุณากรอกรหัสผ่าน"),
+    email: z.string().min(1, "Please enter username."),
+    password: z.string().min(1, "Please enter password."),
 });
 
 export const participantImportSchema = z.object({
-    employee_id: z.string().min(1, "กรุณากรอก employee_id"),
-    name: z.string().min(1, "กรุณากรอกชื่อผู้เข้าร่วม"),
-    mobile: z.string().min(8, "กรุณากรอกเบอร์โทรให้ถูกต้อง"),
+    employee_id: z.string().min(1, "Please enter employee_id."),
+    name: z.string().min(1, "Please enter participant name."),
+    mobile: z.string().min(8, "Please enter a valid mobile number."),
 });
 
 export const prizeTierSchema = z.object({
-    tierName: z.string().min(1, "กรุณากรอกชื่อ tier"),
+    tierName: z.string().min(1, "Please enter tier name."),
     description: z.string().optional().nullable(),
-    quantity: z.number().int().min(1, "จำนวนรางวัลต้องมากกว่า 0"),
+    quantity: z.number().int().min(1, "Prize quantity must be greater than 0."),
     sortOrder: z.number().int().min(1),
 });
 
 export const createCampaignSchema = z.object({
-    title: z.string().min(1, "กรุณากรอกชื่ออีเวนต์"),
+    title: z.string().min(1, "Please enter event name."),
     description: z.string().optional().nullable(),
     bannerUrl: z.string().optional().nullable(),
     startsAt: z.string().optional().nullable(),
@@ -27,11 +27,11 @@ export const createCampaignSchema = z.object({
     participants: z.array(participantImportSchema).default([]),
     prizeTiers: z
         .array(prizeTierSchema)
-        .max(5, "เพิ่ม tier ได้สูงสุด 5 รายการ"),
+        .max(5, "You can add up to 5 tiers."),
 });
 
 export const updateCampaignSchema = z.object({
-    title: z.string().min(1, "กรุณากรอกชื่ออีเวนต์"),
+    title: z.string().min(1, "Please enter event name."),
     description: z.string().optional().nullable(),
     bannerUrl: z.string().optional().nullable(),
     startsAt: z.string().optional().nullable(),
@@ -39,7 +39,7 @@ export const updateCampaignSchema = z.object({
 });
 
 export const drawRequestSchema = z.object({
-    prizeTierId: z.string().uuid("prizeTierId ไม่ถูกต้อง"),
+    prizeTierId: z.string().uuid("Invalid prizeTierId."),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

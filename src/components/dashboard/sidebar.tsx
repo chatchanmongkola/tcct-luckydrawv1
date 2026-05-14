@@ -16,7 +16,7 @@ interface SidebarProps {
 
 const navItems = [
     { href: "/campaigns", label: "Events", icon: Calendar },
-    { href: "/settings", label: "ตั้งค่า", icon: Settings },
+    { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
@@ -93,7 +93,7 @@ export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
                         onClick={() => signOut({ callbackUrl: "/login" })}
                     >
                         <LogOut size={16} />
-                        ออกจากระบบ
+                        Sign out
                     </Button>
                 </div>
             </aside>

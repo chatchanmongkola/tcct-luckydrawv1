@@ -8,7 +8,7 @@ export async function GET() {
         return ok(campaigns);
     } catch (error) {
         console.error("Failed to list campaigns", error);
-        return fail("ไม่สามารถดึงรายการอีเวนต์ได้", "CAMPAIGN_LIST_FAILED", {
+        return fail("Failed to load events.", "CAMPAIGN_LIST_FAILED", {
             status: 500,
         });
     }
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
         const parsed = createCampaignSchema.safeParse(json);
 
         if (!parsed.success) {
-            return fail("ข้อมูลไม่ถูกต้อง", "VALIDATION_ERROR", {
+            return fail("Invalid input.", "VALIDATION_ERROR", {
                 status: 400,
             });
         }
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
         return ok(campaign, { status: 201 });
     } catch (error) {
         console.error("Failed to create campaign", error);
-        return fail("ไม่สามารถสร้างอีเวนต์ได้", "CAMPAIGN_CREATE_FAILED", {
+        return fail("Failed to create event.", "CAMPAIGN_CREATE_FAILED", {
             status: 500,
         });
     }

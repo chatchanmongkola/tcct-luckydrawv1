@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
     AlertTriangle,
@@ -31,17 +32,13 @@ function formatDate(isoString: string | null) {
 }
 
 function getCardAction(campaign: CampaignSummary) {
-    const isFinished =
-        campaign.status === "COMPLETED" ||
-        campaign.status === "ARCHIVED" ||
-        (campaign.totalPrizeQuantity > 0 &&
-            campaign.drawnCount >= campaign.totalPrizeQuantity);
+    const isFinished = isCampaignFinished(campaign);
 
     if (isFinished) {
         return {
             label: "View History",
             icon: Eye,
-            href: `/draw/${campaign.id}`,
+            href: `/campaigns/${campaign.id}/history`,
             variant: "history" as const,
         };
     }
@@ -54,11 +51,22 @@ function getCardAction(campaign: CampaignSummary) {
     };
 }
 
+function isCampaignFinished(campaign: CampaignSummary) {
+    return (
+        campaign.status === "COMPLETED" ||
+        campaign.status === "ARCHIVED" ||
+        (campaign.totalPrizeQuantity > 0 &&
+            campaign.drawnCount >= campaign.totalPrizeQuantity)
+    );
+}
+
 function CardMenu({
     campaign,
+    canEdit,
     onDeleteRequest,
 }: {
     campaign: CampaignSummary;
+    canEdit: boolean;
     onDeleteRequest: (campaign: CampaignSummary) => void;
 }) {
     const [open, setOpen] = useState(false);
@@ -79,7 +87,7 @@ function CardMenu({
         <div ref={ref} className="relative">
             <button
                 type="button"
-                aria-label="เมนูอีเวนต์"
+                aria-label="Event menu"
                 onClick={() => setOpen((v) => !v)}
                 className="flex h-8 w-8 items-center justify-center rounded-[4px] text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
             >
@@ -88,14 +96,16 @@ function CardMenu({
 
             {open && (
                 <div className="absolute right-0 top-9 z-10 min-w-[160px] overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-lg">
-                    <Link
-                        href={`/campaigns/${campaign.id}/edit`}
-                        onClick={() => setOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-                    >
-                        <Pencil className="h-4 w-4" />
-                        Edit Event
-                    </Link>
+                    {canEdit ? (
+                        <Link
+                            href={`/campaigns/${campaign.id}/edit`}
+                            onClick={() => setOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                        >
+                            <Pencil className="h-4 w-4" />
+                            Edit Event
+                        </Link>
+                    ) : null}
                     <button
                         type="button"
                         onClick={() => {
@@ -114,6 +124,7 @@ function CardMenu({
 }
 
 export function CampaignsClient() {
+    const router = useRouter();
     const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -124,6 +135,10 @@ export function CampaignsClient() {
     );
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [pendingAction, setPendingAction] = useState<{
+        campaignId: string;
+        type: "draw" | "history";
+    } | null>(null);
 
     const loadCampaigns = async () => {
         setIsLoading(true);
@@ -143,7 +158,7 @@ export function CampaignsClient() {
 
             setCampaigns(payload.data);
         } catch {
-            setError("โหลดรายการอีเวนต์ไม่สำเร็จ");
+            setError("Failed to load events.");
         } finally {
             setIsLoading(false);
         }
@@ -152,6 +167,17 @@ export function CampaignsClient() {
     useEffect(() => {
         void loadCampaigns();
     }, []);
+
+    const handleCardAction = (
+        campaignId: string,
+        href: string,
+        type: "draw" | "history",
+    ) => {
+        if (pendingAction) return;
+
+        setPendingAction({ campaignId, type });
+        router.push(href);
+    };
 
     const confirmDelete = async () => {
         if (!deleteTarget) return;
@@ -167,7 +193,7 @@ export function CampaignsClient() {
             );
 
             if (!response.ok) {
-                throw new Error("ไม่สามารถลบอีเวนต์ได้");
+                throw new Error("Unable to delete event.");
             }
 
             // Optimistic: remove from list immediately
@@ -176,7 +202,7 @@ export function CampaignsClient() {
             );
             setDeleteTarget(null);
         } catch {
-            setDeleteError("ลบอีเวนต์ไม่สำเร็จ กรุณาลองใหม่");
+            setDeleteError("Failed to delete event. Please try again.");
         } finally {
             setIsDeleting(false);
         }
@@ -204,14 +230,14 @@ export function CampaignsClient() {
                             </button>
                         </div>
                         <h2 className="mt-4 text-lg font-bold text-slate-900">
-                            ลบ Event นี้?
+                            Delete this event?
                         </h2>
                         <p className="mt-1.5 text-sm text-slate-500">
                             Event{" "}
                             <span className="font-semibold text-slate-800">
                                 &ldquo;{deleteTarget.title}&rdquo;
                             </span>{" "}
-                            จะถูกลบออกและไม่สามารถกู้คืนได้
+                            will be deleted and cannot be recovered.
                         </p>
                         {deleteError && (
                             <p className="mt-3 text-sm font-medium text-rose-600">
@@ -228,7 +254,7 @@ export function CampaignsClient() {
                                 disabled={isDeleting}
                                 className="rounded-[4px] border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                             >
-                                ยกเลิก
+                                Cancel
                             </button>
                             <button
                                 type="button"
@@ -239,7 +265,7 @@ export function CampaignsClient() {
                                 {isDeleting && (
                                     <Loader2 className="h-4 w-4 animate-spin" />
                                 )}
-                                ลบ Event
+                                Delete Event
                             </button>
                         </div>
                     </div>
@@ -251,7 +277,7 @@ export function CampaignsClient() {
                         Events
                     </h1>
                     <p className="mt-2 text-sm text-slate-500">
-                        จัดการ Lucky Draw Events ทั้งหมด
+                        Manage all Lucky Draw events.
                     </p>
                 </div>
                 <Link
@@ -293,16 +319,16 @@ export function CampaignsClient() {
                         onClick={() => void loadCampaigns()}
                         className="mt-4 rounded-[4px] bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/80"
                     >
-                        ลองใหม่
+                        Retry
                     </button>
                 </div>
             ) : campaigns.length === 0 ? (
                 <div className="rounded-[24px] border border-dashed border-slate-300 bg-white p-12 text-center shadow-[0_2px_12px_rgba(15,23,42,0.06)]">
                     <p className="text-sm font-medium text-slate-700">
-                        ยังไม่มีอีเวนต์
+                        No events yet
                     </p>
                     <p className="mt-1 text-sm text-slate-500">
-                        เริ่มต้นสร้าง Lucky Draw event แรกของคุณได้เลย
+                        Create your first Lucky Draw event to get started.
                     </p>
                     <Link
                         href="/campaigns/new"
@@ -331,6 +357,7 @@ export function CampaignsClient() {
                                     </div>
                                     <CardMenu
                                         campaign={campaign}
+                                        canEdit={!isCampaignFinished(campaign)}
                                         onDeleteRequest={setDeleteTarget}
                                     />
                                 </div>
@@ -368,19 +395,43 @@ export function CampaignsClient() {
                                     {(() => {
                                         const action = getCardAction(campaign);
                                         const ActionIcon = action.icon;
+                                        const actionType = action.variant;
+                                        const isPending =
+                                            pendingAction?.campaignId ===
+                                                campaign.id &&
+                                            pendingAction.type === actionType;
+                                        const loadingLabel =
+                                            actionType === "history"
+                                                ? "Opening history..."
+                                                : "Opening draw...";
 
                                         return (
-                                            <Link
-                                                href={action.href}
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    handleCardAction(
+                                                        campaign.id,
+                                                        action.href,
+                                                        actionType,
+                                                    )
+                                                }
+                                                disabled={!!pendingAction}
+                                                aria-busy={isPending}
                                                 className={
                                                     action.variant === "history"
-                                                        ? "flex h-11 w-full items-center justify-center gap-2 rounded-[4px] bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary/90"
-                                                        : "flex h-11 w-full items-center justify-center gap-2 rounded-[4px] bg-secondary text-sm font-semibold text-white transition-colors hover:bg-secondary/90"
+                                                        ? "flex h-11 w-full items-center justify-center gap-2 rounded-[4px] bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+                                                        : "flex h-11 w-full items-center justify-center gap-2 rounded-[4px] bg-secondary text-sm font-semibold text-white transition-colors hover:bg-secondary/90 disabled:cursor-not-allowed disabled:opacity-70"
                                                 }
                                             >
-                                                <ActionIcon className="h-4 w-4" />
-                                                {action.label}
-                                            </Link>
+                                                {isPending ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <ActionIcon className="h-4 w-4" />
+                                                )}
+                                                {isPending
+                                                    ? loadingLabel
+                                                    : action.label}
+                                            </button>
                                         );
                                     })()}
                                 </div>
