@@ -1,5 +1,8 @@
 import { auth } from "@/lib/auth";
-import { createAccessLog, listAllAccessLogs } from "@/lib/access-logs";
+import {
+    createAccessLog,
+    listAccessLogsMappedForExport,
+} from "@/lib/access-logs";
 import { fail } from "@/lib/api-response";
 import { isStaffRole } from "@/lib/roles";
 
@@ -7,7 +10,7 @@ function toCsvCell(value: unknown) {
     return `"${String(value ?? "").replace(/"/g, '""')}"`;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const session = await auth();
         if (!session?.user) {
@@ -24,24 +27,35 @@ export async function GET() {
             );
         }
 
+        const url = new URL(request.url);
+        const action = url.searchParams.get("action");
+        const actorId = url.searchParams.get("actorId");
+
         await createAccessLog({
             actorId: session.user.id,
             action: "ACCESS_LOG_EXPORT",
             targetType: "access_logs",
             metadata: {
                 source: "settings_export",
+                filters: {
+                    action,
+                    actorId,
+                },
             },
         });
 
-        const logs = await listAllAccessLogs();
+        const logs = await listAccessLogsMappedForExport({ action, actorId });
 
         const header = [
             "id",
             "actor_id",
+            "actor_name",
             "action",
             "target_type",
             "target_id",
+            "target_label",
             "campaign_id",
+            "campaign_title",
             "metadata",
             "created_at",
         ];
@@ -49,10 +63,13 @@ export async function GET() {
         const rows = logs.map((row) => [
             row.id,
             row.actorId,
+            row.actorDisplay,
             row.action,
             row.targetType,
             row.targetId,
+            row.targetDisplay,
             row.campaignId,
+            row.campaignDisplay,
             JSON.stringify(row.metadata ?? null),
             new Date(row.createdAt).toISOString(),
         ]);

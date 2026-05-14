@@ -58,6 +58,13 @@ export type ExecuteDrawResult = {
     drawCount: number;
     remaining: number;
     isTierComplete: boolean;
+    audit: {
+        algorithm: string;
+        nonce: string;
+        drawnAt: string;
+        batchSize: number;
+        eligibleCountBeforeDraw: number;
+    };
     winners: DrawWinner[];
 };
 
@@ -72,8 +79,16 @@ export type CampaignHistoryTier = {
     winners: Array<
         DrawWinner & {
             drawnAt: string;
+            drawSessionId: string;
+            nonce: string;
         }
     >;
+    sessions: Array<{
+        id: string;
+        nonce: string;
+        drawnAt: string;
+        winnerCount: number;
+    }>;
 };
 
 export type CampaignHistory = {
@@ -90,6 +105,19 @@ export type CampaignHistory = {
         drawn: number;
     };
     tiers: CampaignHistoryTier[];
+};
+
+export type CampaignDrawAudit = {
+    campaignId: string;
+    sessions: Array<{
+        sessionId: string;
+        prizeTierId: string;
+        prizeTierName: string;
+        nonce: string;
+        drawnAt: string;
+        winnerCount: number;
+        algorithm: string;
+    }>;
 };
 
 function pickRandomDistinct<T>(items: T[], count: number): T[] {
@@ -214,59 +242,66 @@ export async function executeDraw(
         );
     }
 
-    const wonCount = await db.drawResult.count({
-        where: { campaignId, prizeTierId: tier.id },
-    });
-
-    const remaining = Math.max(0, tier.quantity - wonCount);
-    if (remaining <= 0) {
-        throw new DrawServiceError(
-            "PRIZE_TIER_COMPLETED",
-            "This prize tier is already completed.",
-            409,
-        );
-    }
-
-    const alreadyWon = await db.drawResult.findMany({
-        where: { campaignId },
-        select: { participantId: true },
-    });
-
-    const excludedIds = alreadyWon.map((item) => item.participantId);
-    const eligibleParticipants = await db.participant.findMany({
-        where: {
+    const txResult = await db.$transaction(async (tx) => {
+        // Lock by campaign+tier to prevent overlapping draws for the same bucket.
+        await tx.$executeRawUnsafe(
+            `SELECT pg_advisory_xact_lock(hashtext($1), hashtext($2))`,
             campaignId,
-            isDeleted: false,
-            id: {
-                notIn: excludedIds,
-            },
-        },
-        select: {
-            id: true,
-            employeeId: true,
-            name: true,
-            mobile: true,
-        },
-    });
-
-    if (!eligibleParticipants.length) {
-        throw new DrawServiceError(
-            "NO_ELIGIBLE_PARTICIPANTS",
-            "No eligible participants remaining.",
-            409,
+            tier.id,
         );
-    }
 
-    const drawCount = Math.min(
-        DRAW_BATCH_SIZE,
-        remaining,
-        eligibleParticipants.length,
-    );
+        const wonCount = await tx.drawResult.count({
+            where: { campaignId, prizeTierId: tier.id },
+        });
 
-    const winners = pickRandomDistinct(eligibleParticipants, drawCount);
-    const nonce = randomUUID();
+        const remaining = Math.max(0, tier.quantity - wonCount);
+        if (remaining <= 0) {
+            throw new DrawServiceError(
+                "PRIZE_TIER_COMPLETED",
+                "This prize tier is already completed.",
+                409,
+            );
+        }
 
-    const session = await db.$transaction(async (tx) => {
+        const alreadyWon = await tx.drawResult.findMany({
+            where: { campaignId },
+            select: { participantId: true },
+        });
+
+        const excludedIds = alreadyWon.map((item) => item.participantId);
+        const eligibleParticipants = await tx.participant.findMany({
+            where: {
+                campaignId,
+                isDeleted: false,
+                id: {
+                    notIn: excludedIds,
+                },
+            },
+            select: {
+                id: true,
+                employeeId: true,
+                name: true,
+                mobile: true,
+            },
+        });
+
+        if (!eligibleParticipants.length) {
+            throw new DrawServiceError(
+                "NO_ELIGIBLE_PARTICIPANTS",
+                "No eligible participants remaining.",
+                409,
+            );
+        }
+
+        const drawCount = Math.min(
+            DRAW_BATCH_SIZE,
+            remaining,
+            eligibleParticipants.length,
+        );
+
+        const winners = pickRandomDistinct(eligibleParticipants, drawCount);
+        const nonce = randomUUID();
+
         if (campaign.status === "DRAFT") {
             await tx.campaign.update({
                 where: { id: campaign.id },
@@ -281,7 +316,7 @@ export async function executeDraw(
                 state: "COMPLETED",
                 nonce,
             },
-            select: { id: true },
+            select: { id: true, nonce: true, drawnAt: true },
         });
 
         await tx.drawResult.createMany({
@@ -309,18 +344,29 @@ export async function executeDraw(
             });
         }
 
-        return createdSession;
+        return {
+            session: createdSession,
+            winners,
+            drawCount,
+            remainingAfter: Math.max(0, remaining - drawCount),
+            eligibleCountBeforeDraw: eligibleParticipants.length,
+        };
     });
 
-    const newRemaining = Math.max(0, remaining - drawCount);
-
     return {
-        sessionId: session.id,
+        sessionId: txResult.session.id,
         prizeTierId: tier.id,
-        drawCount,
-        remaining: newRemaining,
-        isTierComplete: newRemaining === 0,
-        winners: winners.map((winner) => ({
+        drawCount: txResult.drawCount,
+        remaining: txResult.remainingAfter,
+        isTierComplete: txResult.remainingAfter === 0,
+        audit: {
+            algorithm: "node:crypto.randomInt",
+            nonce: txResult.session.nonce,
+            drawnAt: txResult.session.drawnAt.toISOString(),
+            batchSize: DRAW_BATCH_SIZE,
+            eligibleCountBeforeDraw: txResult.eligibleCountBeforeDraw,
+        },
+        winners: txResult.winners.map((winner) => ({
             participantId: winner.id,
             employeeId: winner.employeeId,
             name: winner.name,
@@ -359,7 +405,7 @@ export async function getTierWinners(
 export async function getCampaignHistory(
     campaignId: string,
 ): Promise<CampaignHistory> {
-    const [campaign, participantsCount] = await Promise.all([
+    const [campaign, participantsCount, sessions] = await Promise.all([
         db.campaign.findFirst({
             where: { id: campaignId, isDeleted: false },
             select: {
@@ -381,8 +427,14 @@ export async function getCampaignHistory(
                 drawResults: {
                     orderBy: [{ createdAt: "asc" }],
                     select: {
+                        drawSessionId: true,
                         prizeTierId: true,
                         createdAt: true,
+                        drawSession: {
+                            select: {
+                                nonce: true,
+                            },
+                        },
                         participant: {
                             select: {
                                 id: true,
@@ -397,6 +449,21 @@ export async function getCampaignHistory(
         }),
         db.participant.count({
             where: { campaignId, isDeleted: false },
+        }),
+        db.drawSession.findMany({
+            where: { campaignId },
+            orderBy: [{ drawnAt: "asc" }],
+            select: {
+                id: true,
+                prizeTierId: true,
+                nonce: true,
+                drawnAt: true,
+                _count: {
+                    select: {
+                        results: true,
+                    },
+                },
+            },
         }),
     ]);
 
@@ -417,8 +484,22 @@ export async function getCampaignHistory(
             name: result.participant.name,
             mobile: result.participant.mobile,
             drawnAt: result.createdAt.toISOString(),
+            drawSessionId: result.drawSessionId,
+            nonce: result.drawSession.nonce,
         });
         winnerMap.set(result.prizeTierId, current);
+    }
+
+    const sessionMap = new Map<string, CampaignHistoryTier["sessions"]>();
+    for (const session of sessions) {
+        const current = sessionMap.get(session.prizeTierId) ?? [];
+        current.push({
+            id: session.id,
+            nonce: session.nonce,
+            drawnAt: session.drawnAt.toISOString(),
+            winnerCount: session._count.results,
+        });
+        sessionMap.set(session.prizeTierId, current);
     }
 
     const tiers: CampaignHistoryTier[] = campaign.prizeTiers.map((tier) => {
@@ -432,6 +513,7 @@ export async function getCampaignHistory(
             wonCount: winners.length,
             isComplete: winners.length >= tier.quantity,
             winners,
+            sessions: sessionMap.get(tier.id) ?? [],
         };
     });
 
@@ -452,5 +534,56 @@ export async function getCampaignHistory(
             drawn: totalDrawn,
         },
         tiers,
+    };
+}
+
+export async function getCampaignDrawAudit(
+    campaignId: string,
+): Promise<CampaignDrawAudit> {
+    const campaign = await db.campaign.findFirst({
+        where: { id: campaignId, isDeleted: false },
+        select: { id: true },
+    });
+
+    if (!campaign) {
+        throw new DrawServiceError(
+            "CAMPAIGN_NOT_FOUND",
+            "Campaign not found.",
+            404,
+        );
+    }
+
+    const sessions = await db.drawSession.findMany({
+        where: { campaignId },
+        orderBy: [{ drawnAt: "asc" }],
+        select: {
+            id: true,
+            nonce: true,
+            drawnAt: true,
+            prizeTierId: true,
+            prizeTier: {
+                select: {
+                    tierName: true,
+                },
+            },
+            _count: {
+                select: {
+                    results: true,
+                },
+            },
+        },
+    });
+
+    return {
+        campaignId,
+        sessions: sessions.map((session) => ({
+            sessionId: session.id,
+            prizeTierId: session.prizeTierId,
+            prizeTierName: session.prizeTier.tierName,
+            nonce: session.nonce,
+            drawnAt: session.drawnAt.toISOString(),
+            winnerCount: session._count.results,
+            algorithm: "node:crypto.randomInt",
+        })),
     };
 }

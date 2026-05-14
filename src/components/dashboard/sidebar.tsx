@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Calendar, Settings, LogOut, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Calendar, Settings, LogOut, X, ChevronDown } from "lucide-react";
 
-import { isStaffRole } from "@/lib/roles";
+import { isAdminRole, isStaffRole } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -17,14 +18,28 @@ interface SidebarProps {
 
 const navItems = [
     { href: "/campaigns", label: "Events", icon: Calendar },
-    { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
-    const visibleNavItems = isStaffRole(user.role)
-        ? navItems.filter((item) => item.href !== "/settings")
-        : navItems;
+    const router = useRouter();
+    const [isSettingsExpanded, setIsSettingsExpanded] = useState(
+        pathname.startsWith("/settings"),
+    );
+    const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+    const [clearPassword, setClearPassword] = useState("");
+    const [isClearingData, setIsClearingData] = useState(false);
+    const [actionError, setActionError] = useState<string | null>(null);
+    const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (pathname.startsWith("/settings")) {
+            setIsSettingsExpanded(true);
+        }
+    }, [pathname]);
+
+    const isStaff = isStaffRole(user.role);
+    const isAdmin = isAdminRole(user.role);
 
     const handleSignOut = async () => {
         try {
@@ -43,6 +58,60 @@ export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
         }
 
         await signOut({ callbackUrl: "/login" });
+    };
+
+    const handleClearData = async () => {
+        if (!clearPassword.trim()) {
+            setActionError("Clear-data password is required.");
+            return;
+        }
+
+        setIsClearingData(true);
+        setActionError(null);
+        setActionMessage(null);
+
+        try {
+            const response = await fetch("/api/v1/settings/clear-data", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    password: clearPassword,
+                }),
+            });
+
+            const payload = (await response.json()) as
+                | { success: true; data: { campaigns: number } }
+                | { success: false; error: string };
+
+            if (!response.ok || !payload.success) {
+                throw new Error(
+                    payload.success
+                        ? "Failed to clear all data."
+                        : payload.error,
+                );
+            }
+
+            setActionMessage(
+                `Clear completed. Soft-deleted ${payload.data.campaigns} events.`,
+            );
+            setIsClearModalOpen(false);
+            setClearPassword("");
+            
+            // Reload the campaigns page to show updated data
+            setTimeout(() => {
+                router.push('/campaigns');
+            }, 500);
+        } catch (error) {
+            setActionError(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to clear all data.",
+            );
+        } finally {
+            setIsClearingData(false);
+        }
     };
 
     return (
@@ -82,7 +151,7 @@ export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
                 </div>
 
                 <nav className="flex-1 space-y-2 p-4">
-                    {visibleNavItems.map(({ href, label, icon: Icon }) => (
+                    {navItems.map(({ href, label, icon: Icon }) => (
                         <Link
                             key={href}
                             href={href}
@@ -98,6 +167,80 @@ export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
                             {label}
                         </Link>
                     ))}
+
+                    {!isStaff ? (
+                        <div className="space-y-1">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setIsSettingsExpanded((prev) => !prev)
+                                }
+                                className={cn(
+                                    "flex w-full items-center justify-between rounded-[4px] px-3 py-2.5 text-sm font-medium transition-colors",
+                                    pathname.startsWith("/settings")
+                                        ? "bg-primary text-white"
+                                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                                )}
+                            >
+                                <span className="flex items-center gap-3">
+                                    <Settings size={16} />
+                                    Settings
+                                </span>
+                                <ChevronDown
+                                    size={16}
+                                    className={cn(
+                                        "transition-transform",
+                                        isSettingsExpanded
+                                            ? "rotate-180"
+                                            : "rotate-0",
+                                    )}
+                                />
+                            </button>
+
+                            {isSettingsExpanded ? (
+                                <div className="ml-7 space-y-1 border-l border-slate-200 pl-3">
+                                    <Link
+                                        href="/settings/access-logs"
+                                        onClick={onClose}
+                                        className={cn(
+                                            "block rounded-[4px] px-2 py-1.5 text-sm transition-colors",
+                                            pathname.startsWith(
+                                                "/settings/access-logs",
+                                            )
+                                                ? "bg-slate-100 font-semibold text-slate-900"
+                                                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                                        )}
+                                    >
+                                        Download All Access Log
+                                    </Link>
+                                    {isAdmin ? (
+                                        <Link
+                                            href="/settings/users"
+                                            onClick={onClose}
+                                            className={cn(
+                                                "block rounded-[4px] px-2 py-1.5 text-sm transition-colors",
+                                                pathname.startsWith("/settings/users")
+                                                    ? "bg-slate-100 font-semibold text-slate-900"
+                                                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                                            )}
+                                        >
+                                            User Management
+                                        </Link>
+                                    ) : null}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsClearModalOpen(true);
+                                            setActionError(null);
+                                        }}
+                                        className="block w-full rounded-[4px] px-2 py-1.5 text-left text-sm text-rose-700 transition-colors hover:bg-rose-50"
+                                    >
+                                        Clear All Data
+                                    </button>
+                                </div>
+                            ) : null}
+                        </div>
+                    ) : null}
                 </nav>
 
                 <div className="border-t border-slate-200 p-4">
@@ -120,6 +263,71 @@ export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
                     </Button>
                 </div>
             </aside>
+
+            {isClearModalOpen ? (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 px-4">
+                    <div className="w-full max-w-md rounded-[12px] bg-white p-5 shadow-xl">
+                        <h3 className="text-lg font-bold text-slate-900">
+                            Clear All Data
+                        </h3>
+                        <p className="mt-2 text-sm text-slate-600">
+                            Enter password Lucky888 to confirm soft-delete all events.
+                        </p>
+
+                        <div className="mt-4 space-y-1.5">
+                            <label
+                                htmlFor="clear-all-data-password"
+                                className="text-sm font-medium text-slate-700"
+                            >
+                                Clear-data password
+                            </label>
+                            <input
+                                id="clear-all-data-password"
+                                type="password"
+                                value={clearPassword}
+                                onChange={(event) =>
+                                    setClearPassword(event.target.value)
+                                }
+                                className="w-full rounded-[6px] border border-slate-300 px-3 py-2 text-sm outline-none focus:border-rose-400"
+                                placeholder="Enter Lucky888"
+                            />
+                        </div>
+
+                        {actionError ? (
+                            <p className="mt-3 text-sm text-rose-700">{actionError}</p>
+                        ) : null}
+
+                        <div className="mt-4 flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsClearModalOpen(false);
+                                    setClearPassword("");
+                                    setActionError(null);
+                                }}
+                                disabled={isClearingData}
+                                className="rounded-[6px] border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => void handleClearData()}
+                                disabled={isClearingData}
+                                className="rounded-[6px] border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {isClearingData ? "Clearing..." : "Confirm"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
+
+            {actionMessage ? (
+                <div className="fixed bottom-4 right-4 z-[60] rounded-[8px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 shadow-lg">
+                    {actionMessage}
+                </div>
+            ) : null}
         </>
     );
 }

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Winner = {
     participantId: string;
@@ -10,6 +10,15 @@ type Winner = {
     name: string;
     mobile: string;
     drawnAt: string;
+    drawSessionId: string;
+    nonce: string;
+};
+
+type TierSession = {
+    id: string;
+    nonce: string;
+    drawnAt: string;
+    winnerCount: number;
 };
 
 type HistoryTier = {
@@ -21,6 +30,7 @@ type HistoryTier = {
     wonCount: number;
     isComplete: boolean;
     winners: Winner[];
+    sessions: TierSession[];
 };
 
 type HistoryData = {
@@ -75,6 +85,30 @@ export function HistoryClient({
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const load = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch(`/api/v1/campaigns/${campaignId}/history`, {
+                cache: "no-store",
+            });
+            const payload = (await response.json()) as
+                | ApiSuccess<HistoryData>
+                | ApiError;
+
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.success ? "Unknown error" : payload.error);
+            }
+
+            setData(payload.data);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to load history.");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [campaignId]);
+
     const logClientAction = async (
         action: "HISTORY_EXPORT_CSV" | "HISTORY_EXPORT_JPG",
         metadata: Record<string, unknown>,
@@ -99,41 +133,8 @@ export function HistoryClient({
     };
 
     useEffect(() => {
-        const load = async () => {
-            setIsLoading(true);
-            setError(null);
-
-            try {
-                const response = await fetch(
-                    `/api/v1/campaigns/${campaignId}/history`,
-                    {
-                        cache: "no-store",
-                    },
-                );
-                const payload = (await response.json()) as
-                    | ApiSuccess<HistoryData>
-                    | ApiError;
-
-                if (!response.ok || !payload.success) {
-                    throw new Error(
-                        payload.success ? "Unknown error" : payload.error,
-                    );
-                }
-
-                setData(payload.data);
-            } catch (err) {
-                setError(
-                    err instanceof Error
-                        ? err.message
-                        : "Failed to load history.",
-                );
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
         void load();
-    }, [campaignId]);
+    }, [load]);
 
     const exportAllCsv = () => {
         if (!data) return;
@@ -309,6 +310,8 @@ export function HistoryClient({
                           name: "No winner yet",
                           mobile: "",
                           drawnAt: "",
+                              drawSessionId: "",
+                              nonce: "",
                       },
                   ];
 
@@ -371,6 +374,13 @@ export function HistoryClient({
                 <p className="text-sm font-semibold text-rose-700">
                     {error ?? "History data not found."}
                 </p>
+                <button
+                    type="button"
+                    onClick={() => void load()}
+                    className="mt-3 rounded-[6px] border border-rose-300 bg-white px-3 py-1.5 text-sm font-semibold text-rose-700 hover:bg-rose-50"
+                >
+                    Retry
+                </button>
             </section>
         );
     }
@@ -468,6 +478,41 @@ export function HistoryClient({
                             ))
                         )}
                     </div>
+
+                    <details className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3">
+                        <summary className="cursor-pointer text-sm font-semibold text-slate-800">
+                            Draw Audit Sessions ({tier.sessions.length})
+                        </summary>
+                        <div className="mt-3 space-y-2 text-xs text-slate-600">
+                            {tier.sessions.length === 0 ? (
+                                <p>No draw sessions in this tier.</p>
+                            ) : (
+                                tier.sessions.map((session) => (
+                                    <div
+                                        key={session.id}
+                                        className="rounded-md border border-slate-200 bg-white p-2"
+                                    >
+                                        <p>
+                                            <span className="font-semibold text-slate-800">Session:</span>{" "}
+                                            {session.id}
+                                        </p>
+                                        <p>
+                                            <span className="font-semibold text-slate-800">Nonce:</span>{" "}
+                                            {session.nonce}
+                                        </p>
+                                        <p>
+                                            <span className="font-semibold text-slate-800">Drawn At:</span>{" "}
+                                            {formatTimestamp(session.drawnAt)}
+                                        </p>
+                                        <p>
+                                            <span className="font-semibold text-slate-800">Winners:</span>{" "}
+                                            {session.winnerCount}
+                                        </p>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </details>
                 </section>
             ))}
         </div>

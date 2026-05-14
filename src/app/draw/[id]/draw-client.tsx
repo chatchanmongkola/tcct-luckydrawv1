@@ -45,6 +45,13 @@ type DrawResponse = {
     drawCount: number;
     remaining: number;
     isTierComplete: boolean;
+    audit: {
+        algorithm: string;
+        nonce: string;
+        drawnAt: string;
+        batchSize: number;
+        eligibleCountBeforeDraw: number;
+    };
     winners: DrawWinner[];
 };
 
@@ -86,6 +93,9 @@ export function DrawClient({
     const [currentBatchSlotStart, setCurrentBatchSlotStart] = useState<
         number | null
     >(null);
+    const [lastAudit, setLastAudit] = useState<DrawResponse["audit"] | null>(
+        null,
+    );
     const previousTierIdRef = useRef<string | null>(null);
 
     const logClientAction = useCallback(
@@ -250,6 +260,7 @@ export function DrawClient({
 
             setWinners(payload.data.winners);
             setMode(payload.data.remaining === 0 ? "complete" : "result");
+            setLastAudit(payload.data.audit);
             await loadState();
         } catch (err) {
             setError(err instanceof Error ? err.message : "Draw failed.");
@@ -456,6 +467,13 @@ export function DrawClient({
                         <p className="text-sm font-semibold text-rose-700">
                             {error ?? "Draw page data not found."}
                         </p>
+                        <button
+                            type="button"
+                            onClick={() => void loadState()}
+                            className="mt-3 rounded-[6px] border border-rose-300 bg-white px-3 py-1.5 text-sm font-semibold text-rose-700 hover:bg-rose-50"
+                        >
+                            Retry
+                        </button>
                     </section>
                 ) : (
                     <>
@@ -480,6 +498,46 @@ export function DrawClient({
                             onExportCsv={exportWinnersCsv}
                             onExportJpg={() => void exportWinnersJpg()}
                         />
+
+                        {lastAudit ? (
+                            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                                <h3 className="text-sm font-bold text-slate-900">
+                                    Last Draw Audit
+                                </h3>
+                                <div className="mt-2 grid gap-2 text-xs text-slate-600 sm:grid-cols-2 lg:grid-cols-5">
+                                    <p>
+                                        <span className="font-semibold text-slate-800">
+                                            Algorithm:
+                                        </span>{" "}
+                                        {lastAudit.algorithm}
+                                    </p>
+                                    <p>
+                                        <span className="font-semibold text-slate-800">
+                                            Nonce:
+                                        </span>{" "}
+                                        {lastAudit.nonce}
+                                    </p>
+                                    <p>
+                                        <span className="font-semibold text-slate-800">
+                                            Drawn At:
+                                        </span>{" "}
+                                        {new Date(lastAudit.drawnAt).toLocaleString("en-GB")}
+                                    </p>
+                                    <p>
+                                        <span className="font-semibold text-slate-800">
+                                            Batch Size:
+                                        </span>{" "}
+                                        {lastAudit.batchSize}
+                                    </p>
+                                    <p>
+                                        <span className="font-semibold text-slate-800">
+                                            Eligible Before:
+                                        </span>{" "}
+                                        {lastAudit.eligibleCountBeforeDraw}
+                                    </p>
+                                </div>
+                            </section>
+                        ) : null}
                     </>
                 )}
             </main>

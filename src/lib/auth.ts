@@ -3,8 +3,10 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 
 import { authConfig } from "@/lib/auth.config";
+import { isExpiredAt } from "@/lib/expiry";
 import { createAccessLog } from "@/lib/access-logs";
 import { db } from "@/lib/db";
+import { ensureUserManagementColumns } from "@/lib/user-management";
 import { loginSchema } from "@/lib/validations";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -17,6 +19,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
             authorize: async (credentials) => {
                 try {
+                    await ensureUserManagementColumns();
+
                     const parsed = loginSchema.safeParse(credentials);
                     if (!parsed.success) return null;
 
@@ -42,6 +46,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         return null;
                     }
 
+                    const expiryRows = (await db.$queryRawUnsafe(
+                        `
+                        SELECT "expires_at" AS "expiresAt"
+                        FROM "users"
+                        WHERE "id" = $1
+                        LIMIT 1
+                        `,
+                        user.id,
+                    )) as Array<{ expiresAt: Date | null }>;
+
+                    const expiresAt = expiryRows[0]?.expiresAt ?? null;
+                    if (isExpiredAt(expiresAt)) {
+                        return null;
+                    }
+
                     await createAccessLog({
                         actorId: user.id,
                         action: "AUTH_LOGIN",
@@ -57,6 +76,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         name: user.name ?? user.username,
                         email: user.email,
                         role: user.role,
+                        expiresAt: expiresAt ? expiresAt.toISOString() : null,
                     };
                 } catch (error) {
                     console.error("Credentials authorize failed", error);

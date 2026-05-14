@@ -6,5 +6,10 @@ export function normalizeRole(role: string | null | undefined): string {
 }
 
 export function isStaffRole(role: string | null | undefined): boolean {
-    return normalizeRole(role) === ROLE_STAFF;
+    const normalized = normalizeRole(role);
+    return normalized === ROLE_STAFF || normalized === "USER";
+}
+
+export function isAdminRole(role: string | null | undefined): boolean {
+    return normalizeRole(role) === ROLE_ADMIN;
 }

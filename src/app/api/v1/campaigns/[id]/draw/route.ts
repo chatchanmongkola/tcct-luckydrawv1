@@ -57,6 +57,7 @@ export async function POST(request: Request, { params }: Params) {
                     drawCount: result.drawCount,
                     remaining: result.remaining,
                     winnerCount: result.winners.length,
+                    audit: result.audit,
                 },
             });
         }
