@@ -10,7 +10,9 @@ export async function GET(_req: Request, { params }: Params) {
         const campaign = await getCampaign(id);
 
         if (!campaign) {
-            return fail("Event not found.", "CAMPAIGN_NOT_FOUND", { status: 404 });
+            return fail("Event not found.", "CAMPAIGN_NOT_FOUND", {
+                status: 404,
+            });
         }
 
         return ok(campaign);
@@ -36,7 +38,9 @@ export async function PATCH(request: Request, { params }: Params) {
 
         const existing = await getCampaign(id);
         if (!existing) {
-            return fail("Event not found.", "CAMPAIGN_NOT_FOUND", { status: 404 });
+            return fail("Event not found.", "CAMPAIGN_NOT_FOUND", {
+                status: 404,
+            });
         }
 
         if (existing.status === "COMPLETED" || existing.status === "ARCHIVED") {
@@ -63,7 +67,9 @@ export async function DELETE(_req: Request, { params }: Params) {
 
         const existing = await getCampaign(id);
         if (!existing) {
-            return fail("Event not found.", "CAMPAIGN_NOT_FOUND", { status: 404 });
+            return fail("Event not found.", "CAMPAIGN_NOT_FOUND", {
+                status: 404,
+            });
         }
 
         const deleted = await deleteCampaign(id);

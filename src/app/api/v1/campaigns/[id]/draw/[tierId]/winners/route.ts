@@ -10,12 +10,8 @@ export async function GET(_request: Request, { params }: Params) {
         return ok(winners);
     } catch (error) {
         console.error("Failed to list tier winners", error);
-        return fail(
-            "Failed to load winners.",
-            "DRAW_WINNERS_LIST_FAILED",
-            {
-                status: 500,
-            },
-        );
+        return fail("Failed to load winners.", "DRAW_WINNERS_LIST_FAILED", {
+            status: 500,
+        });
     }
 }

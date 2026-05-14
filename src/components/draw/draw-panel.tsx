@@ -85,13 +85,13 @@ export function DrawPanel({
         mode === "ready"
             ? `Press the button below to draw ${drawCount} winner${drawCount > 1 ? "s" : ""} for ${tier.tierName}`
             : mode === "drawing"
-                            ? "The system is drawing winners."
+              ? "The system is drawing winners."
               : mode === "result"
                 ? ""
-                                : "You can view all winners in this tier.";
+                : "You can view all winners in this tier.";
 
-        const effectiveSlotStart =
-                hasShownAllWinners && winners.length > 0 ? 1 : Math.max(1, slotStart);
+    const effectiveSlotStart =
+        hasShownAllWinners && winners.length > 0 ? 1 : Math.max(1, slotStart);
 
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

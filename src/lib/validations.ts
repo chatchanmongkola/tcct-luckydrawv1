@@ -25,9 +25,7 @@ export const createCampaignSchema = z.object({
     startsAt: z.string().optional().nullable(),
     endsAt: z.string().optional().nullable(),
     participants: z.array(participantImportSchema).default([]),
-    prizeTiers: z
-        .array(prizeTierSchema)
-        .max(5, "You can add up to 5 tiers."),
+    prizeTiers: z.array(prizeTierSchema).max(5, "You can add up to 5 tiers."),
 });
 
 export const updateCampaignSchema = z.object({

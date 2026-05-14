@@ -1,8 +1,5 @@
 import { fail, ok } from "@/lib/api-response";
-import {
-    DrawServiceError,
-    getCampaignHistory,
-} from "@/services/draw.service";
+import { DrawServiceError, getCampaignHistory } from "@/services/draw.service";
 
 type Params = { params: Promise<{ id: string }> };
 

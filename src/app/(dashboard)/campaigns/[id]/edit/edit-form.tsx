@@ -80,7 +80,9 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
             router.refresh();
         } catch (e) {
             setError(
-                e instanceof Error ? e.message : "An error occurred while saving.",
+                e instanceof Error
+                    ? e.message
+                    : "An error occurred while saving.",
             );
         } finally {
             setIsSubmitting(false);

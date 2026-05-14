@@ -138,7 +138,11 @@ export async function getDrawState(campaignId: string): Promise<DrawOverview> {
     ]);
 
     if (!campaign) {
-        throw new DrawServiceError("CAMPAIGN_NOT_FOUND", "Campaign not found.", 404);
+        throw new DrawServiceError(
+            "CAMPAIGN_NOT_FOUND",
+            "Campaign not found.",
+            404,
+        );
     }
 
     const wonCountMap = new Map<string, number>();
@@ -187,7 +191,11 @@ export async function executeDraw(
     });
 
     if (!campaign) {
-        throw new DrawServiceError("CAMPAIGN_NOT_FOUND", "Campaign not found.", 404);
+        throw new DrawServiceError(
+            "CAMPAIGN_NOT_FOUND",
+            "Campaign not found.",
+            404,
+        );
     }
 
     const tier = await db.prizeTier.findFirst({
@@ -393,7 +401,11 @@ export async function getCampaignHistory(
     ]);
 
     if (!campaign) {
-        throw new DrawServiceError("CAMPAIGN_NOT_FOUND", "Campaign not found.", 404);
+        throw new DrawServiceError(
+            "CAMPAIGN_NOT_FOUND",
+            "Campaign not found.",
+            404,
+        );
     }
 
     const winnerMap = new Map<string, CampaignHistoryTier["winners"]>();

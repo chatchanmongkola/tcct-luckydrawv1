@@ -99,7 +99,9 @@ export function HistoryClient({
                 setData(payload.data);
             } catch (err) {
                 setError(
-                    err instanceof Error ? err.message : "Failed to load history.",
+                    err instanceof Error
+                        ? err.message
+                        : "Failed to load history.",
                 );
             } finally {
                 setIsLoading(false);
@@ -218,7 +220,11 @@ export function HistoryClient({
 
         ctx.fillStyle = "#64748b";
         ctx.font = "500 20px ui-sans-serif, system-ui, -apple-system";
-        ctx.fillText(`Exported at: ${formatTimestamp(exportedAtIso)}`, padding, 122);
+        ctx.fillText(
+            `Exported at: ${formatTimestamp(exportedAtIso)}`,
+            padding,
+            122,
+        );
         ctx.fillText(
             `Complete at: ${completeAtIso ? formatTimestamp(completeAtIso) : "-"}`,
             padding,

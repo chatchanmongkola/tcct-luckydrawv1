@@ -232,7 +232,9 @@ export default function NewCampaignPage() {
             router.refresh();
         } catch (e) {
             setError(
-                e instanceof Error ? e.message : "An error occurred while saving.",
+                e instanceof Error
+                    ? e.message
+                    : "An error occurred while saving.",
             );
         } finally {
             setIsSubmitting(false);
