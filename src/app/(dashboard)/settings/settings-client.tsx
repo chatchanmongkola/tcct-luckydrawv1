@@ -17,13 +17,18 @@ export function SettingsClient() {
         setError(null);
 
         try {
-            const response = await fetch("/api/v1/settings/access-logs/export", {
-                method: "GET",
-            });
+            const response = await fetch(
+                "/api/v1/settings/access-logs/export",
+                {
+                    method: "GET",
+                },
+            );
 
             if (!response.ok) {
                 const payload = (await response.json()) as ApiError;
-                throw new Error(payload.error || "Failed to download access logs.");
+                throw new Error(
+                    payload.error || "Failed to download access logs.",
+                );
             }
 
             const blob = await response.blob();
@@ -78,9 +83,7 @@ export function SettingsClient() {
 
             if (!response.ok || !payload.success) {
                 throw new Error(
-                    payload.success
-                        ? "Failed to clear data."
-                        : payload.error,
+                    payload.success ? "Failed to clear data." : payload.error,
                 );
             }
 

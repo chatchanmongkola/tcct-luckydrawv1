@@ -15,9 +15,13 @@ export async function GET() {
         }
 
         if (isStaffRole(session.user.role)) {
-            return fail("You do not have permission to access settings.", "FORBIDDEN", {
-                status: 403,
-            });
+            return fail(
+                "You do not have permission to access settings.",
+                "FORBIDDEN",
+                {
+                    status: 403,
+                },
+            );
         }
 
         await createAccessLog({
@@ -66,8 +70,12 @@ export async function GET() {
         });
     } catch (error) {
         console.error("Failed to export access logs", error);
-        return fail("Failed to export access logs.", "ACCESS_LOG_EXPORT_FAILED", {
-            status: 500,
-        });
+        return fail(
+            "Failed to export access logs.",
+            "ACCESS_LOG_EXPORT_FAILED",
+            {
+                status: 500,
+            },
+        );
     }
 }

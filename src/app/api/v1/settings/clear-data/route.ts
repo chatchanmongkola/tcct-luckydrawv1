@@ -12,9 +12,13 @@ export async function POST(request: Request) {
         }
 
         if (isStaffRole(session.user.role)) {
-            return fail("You do not have permission to access settings.", "FORBIDDEN", {
-                status: 403,
-            });
+            return fail(
+                "You do not have permission to access settings.",
+                "FORBIDDEN",
+                {
+                    status: 403,
+                },
+            );
         }
 
         const body = await request.json().catch(() => null);
@@ -24,9 +28,13 @@ export async function POST(request: Request) {
             process.env.CLEAR_ALL_DATA_PASSWORD ?? "Lucky888";
 
         if (!password) {
-            return fail("Clear-data password is required.", "PASSWORD_REQUIRED", {
-                status: 400,
-            });
+            return fail(
+                "Clear-data password is required.",
+                "PASSWORD_REQUIRED",
+                {
+                    status: 400,
+                },
+            );
         }
 
         if (password !== clearDataPassword) {

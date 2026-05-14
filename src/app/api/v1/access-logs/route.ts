@@ -43,8 +43,12 @@ export async function POST(request: Request) {
         return ok({ logged: true });
     } catch (error) {
         console.error("Failed to record access log", error);
-        return fail("Failed to record access log.", "ACCESS_LOG_CREATE_FAILED", {
-            status: 500,
-        });
+        return fail(
+            "Failed to record access log.",
+            "ACCESS_LOG_CREATE_FAILED",
+            {
+                status: 500,
+            },
+        );
     }
 }

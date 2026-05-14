@@ -87,9 +87,13 @@ export async function DELETE(_req: Request, { params }: Params) {
         }
 
         if (isStaffRole(session.user.role)) {
-            return fail("You do not have permission to delete events.", "FORBIDDEN", {
-                status: 403,
-            });
+            return fail(
+                "You do not have permission to delete events.",
+                "FORBIDDEN",
+                {
+                    status: 403,
+                },
+            );
         }
 
         const body = await _req.json().catch(() => null);
