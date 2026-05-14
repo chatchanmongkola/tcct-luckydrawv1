@@ -88,6 +88,32 @@ export function DrawClient({
     >(null);
     const previousTierIdRef = useRef<string | null>(null);
 
+    const logClientAction = useCallback(
+        async (
+            action: "DRAW_EXPORT_CSV" | "DRAW_EXPORT_JPG",
+            metadata: Record<string, unknown>,
+        ) => {
+            try {
+                await fetch("/api/v1/access-logs", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        action,
+                        campaignId,
+                        targetType: "campaign",
+                        targetId: campaignId,
+                        metadata,
+                    }),
+                });
+            } catch {
+                // Ignore client-side logging failures to keep UX smooth.
+            }
+        },
+        [campaignId],
+    );
+
     const loadState = useCallback(async () => {
         const response = await fetch(`/api/v1/campaigns/${campaignId}/draw`, {
             cache: "no-store",
@@ -301,6 +327,12 @@ export function DrawClient({
         link.download = `${selectedTier.tierName.replace(/\s+/g, "-").toLowerCase()}-winners-${fileStamp}.csv`;
         link.click();
         URL.revokeObjectURL(url);
+
+        void logClientAction("DRAW_EXPORT_CSV", {
+            prizeTierId: selectedTier.id,
+            tierName: selectedTier.tierName,
+            winnerCount: winners.length,
+        });
     };
 
     const exportWinnersJpg = () => {
@@ -371,6 +403,12 @@ export function DrawClient({
         link.href = dataUrl;
         link.download = `${selectedTier.tierName.replace(/\s+/g, "-").toLowerCase()}-winners-${fileStamp}.jpg`;
         link.click();
+
+        void logClientAction("DRAW_EXPORT_JPG", {
+            prizeTierId: selectedTier.id,
+            tierName: selectedTier.tierName,
+            winnerCount: winners.length,
+        });
     };
 
     const bannerUrl = overview?.campaign.bannerUrl ?? initialBannerUrl;

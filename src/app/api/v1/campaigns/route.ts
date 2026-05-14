@@ -1,3 +1,5 @@
+import { auth } from "@/lib/auth";
+import { createAccessLogSafe } from "@/lib/access-logs";
 import { fail, ok } from "@/lib/api-response";
 import { createCampaign, listCampaignSummaries } from "@/lib/campaigns";
 import { createCampaignSchema } from "@/lib/validations";
@@ -26,6 +28,21 @@ export async function POST(request: Request) {
         }
 
         const campaign = await createCampaign(parsed.data);
+
+        const session = await auth();
+        if (session?.user) {
+            await createAccessLogSafe({
+                actorId: session.user.id,
+                action: "CAMPAIGN_CREATE",
+                targetType: "campaign",
+                targetId: campaign.id,
+                campaignId: campaign.id,
+                metadata: {
+                    title: parsed.data.title,
+                },
+            });
+        }
+
         return ok(campaign, { status: 201 });
     } catch (error) {
         console.error("Failed to create campaign", error);

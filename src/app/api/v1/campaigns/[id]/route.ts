@@ -1,5 +1,8 @@
+import { auth } from "@/lib/auth";
+import { createAccessLogSafe } from "@/lib/access-logs";
 import { fail, ok } from "@/lib/api-response";
 import { deleteCampaign, getCampaign, updateCampaign } from "@/lib/campaigns";
+import { isStaffRole } from "@/lib/roles";
 import { updateCampaignSchema } from "@/lib/validations";
 
 type Params = { params: Promise<{ id: string }> };
@@ -52,6 +55,21 @@ export async function PATCH(request: Request, { params }: Params) {
         }
 
         const updated = await updateCampaign(id, parsed.data);
+
+        const session = await auth();
+        if (session?.user) {
+            await createAccessLogSafe({
+                actorId: session.user.id,
+                action: "CAMPAIGN_EDIT",
+                targetType: "campaign",
+                targetId: id,
+                campaignId: id,
+                metadata: {
+                    title: parsed.data.title,
+                },
+            });
+        }
+
         return ok(updated);
     } catch (error) {
         console.error("Failed to update campaign", error);
@@ -63,6 +81,34 @@ export async function PATCH(request: Request, { params }: Params) {
 
 export async function DELETE(_req: Request, { params }: Params) {
     try {
+        const session = await auth();
+        if (!session?.user) {
+            return fail("Unauthorized.", "UNAUTHORIZED", { status: 401 });
+        }
+
+        if (isStaffRole(session.user.role)) {
+            return fail("You do not have permission to delete events.", "FORBIDDEN", {
+                status: 403,
+            });
+        }
+
+        const body = await _req.json().catch(() => null);
+        const password =
+            typeof body?.password === "string" ? body.password.trim() : "";
+        const deletePassword = process.env.DELETE_EVENT_PASSWORD ?? "Lucky";
+
+        if (!password) {
+            return fail("Delete password is required.", "PASSWORD_REQUIRED", {
+                status: 400,
+            });
+        }
+
+        if (password !== deletePassword) {
+            return fail("Invalid delete password.", "INVALID_PASSWORD", {
+                status: 403,
+            });
+        }
+
         const { id } = await params;
 
         const existing = await getCampaign(id);
@@ -73,6 +119,18 @@ export async function DELETE(_req: Request, { params }: Params) {
         }
 
         const deleted = await deleteCampaign(id);
+
+        await createAccessLogSafe({
+            actorId: session.user.id,
+            action: "CAMPAIGN_DELETE",
+            targetType: "campaign",
+            targetId: id,
+            campaignId: id,
+            metadata: {
+                title: existing.title,
+            },
+        });
+
         return ok(deleted);
     } catch (error) {
         console.error("Failed to delete campaign", error);

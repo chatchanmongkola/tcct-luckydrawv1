@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Calendar, Settings, LogOut, X } from "lucide-react";
 
+import { isStaffRole } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +22,28 @@ const navItems = [
 
 export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
+    const visibleNavItems = isStaffRole(user.role)
+        ? navItems.filter((item) => item.href !== "/settings")
+        : navItems;
+
+    const handleSignOut = async () => {
+        try {
+            await fetch("/api/v1/access-logs", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    action: "AUTH_LOGOUT",
+                    targetType: "user",
+                }),
+            });
+        } catch {
+            // Ignore logging failures and continue with sign-out.
+        }
+
+        await signOut({ callbackUrl: "/login" });
+    };
 
     return (
         <>
@@ -59,7 +82,7 @@ export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
                 </div>
 
                 <nav className="flex-1 space-y-2 p-4">
-                    {navItems.map(({ href, label, icon: Icon }) => (
+                    {visibleNavItems.map(({ href, label, icon: Icon }) => (
                         <Link
                             key={href}
                             href={href}
@@ -90,7 +113,7 @@ export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
                         variant="outline"
                         size="sm"
                         className="w-full justify-start gap-3"
-                        onClick={() => signOut({ callbackUrl: "/login" })}
+                        onClick={() => void handleSignOut()}
                     >
                         <LogOut size={16} />
                         Sign out

@@ -1,3 +1,5 @@
+import { auth } from "@/lib/auth";
+import { createAccessLogSafe } from "@/lib/access-logs";
 import { fail, ok } from "@/lib/api-response";
 import { drawRequestSchema } from "@/lib/validations";
 import {
@@ -42,6 +44,23 @@ export async function POST(request: Request, { params }: Params) {
         }
 
         const result = await executeDraw(id, parsed.data.prizeTierId);
+
+        const session = await auth();
+        if (session?.user) {
+            await createAccessLogSafe({
+                actorId: session.user.id,
+                action: "DRAW_EXECUTE",
+                targetType: "prize_tier",
+                targetId: parsed.data.prizeTierId,
+                campaignId: id,
+                metadata: {
+                    drawCount: result.drawCount,
+                    remaining: result.remaining,
+                    winnerCount: result.winners.length,
+                },
+            });
+        }
+
         return ok(result);
     } catch (error) {
         console.error("Failed to execute draw", error);

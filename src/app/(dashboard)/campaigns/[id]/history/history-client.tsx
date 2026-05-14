@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Winner = {
@@ -73,6 +74,29 @@ export function HistoryClient({
     const [data, setData] = useState<HistoryData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const logClientAction = async (
+        action: "HISTORY_EXPORT_CSV" | "HISTORY_EXPORT_JPG",
+        metadata: Record<string, unknown>,
+    ) => {
+        try {
+            await fetch("/api/v1/access-logs", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    action,
+                    campaignId,
+                    targetType: "campaign",
+                    targetId: campaignId,
+                    metadata,
+                }),
+            });
+        } catch {
+            // Ignore client-side logging failures to keep export flow smooth.
+        }
+    };
 
     useEffect(() => {
         const load = async () => {
@@ -156,6 +180,14 @@ export function HistoryClient({
         link.download = `${initialTitle.replace(/\s+/g, "-").toLowerCase()}-history-${fileStamp}.csv`;
         link.click();
         URL.revokeObjectURL(url);
+
+        void logClientAction("HISTORY_EXPORT_CSV", {
+            tierCount: data.tiers.length,
+            winnerCount: data.tiers.reduce(
+                (sum, tier) => sum + tier.winners.length,
+                0,
+            ),
+        });
     };
 
     const exportAllJpg = () => {
@@ -315,6 +347,14 @@ export function HistoryClient({
         link.href = dataUrl;
         link.download = `${initialTitle.replace(/\s+/g, "-").toLowerCase()}-history-${fileStamp}.jpg`;
         link.click();
+
+        void logClientAction("HISTORY_EXPORT_JPG", {
+            tierCount: data.tiers.length,
+            winnerCount: data.tiers.reduce(
+                (sum, tier) => sum + tier.winners.length,
+                0,
+            ),
+        });
     };
 
     if (isLoading) {
@@ -366,6 +406,12 @@ export function HistoryClient({
                     </div>
 
                     <div className="flex gap-2">
+                        <Link
+                            href="/campaigns"
+                            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                        >
+                            Back to Events
+                        </Link>
                         <button
                             type="button"
                             onClick={exportAllCsv}

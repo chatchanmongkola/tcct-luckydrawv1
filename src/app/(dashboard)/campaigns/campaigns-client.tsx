@@ -63,10 +63,12 @@ function isCampaignFinished(campaign: CampaignSummary) {
 function CardMenu({
     campaign,
     canEdit,
+    canDelete,
     onDeleteRequest,
 }: {
     campaign: CampaignSummary;
     canEdit: boolean;
+    canDelete: boolean;
     onDeleteRequest: (campaign: CampaignSummary) => void;
 }) {
     const [open, setOpen] = useState(false);
@@ -106,24 +108,30 @@ function CardMenu({
                             Edit Event
                         </Link>
                     ) : null}
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setOpen(false);
-                            onDeleteRequest(campaign);
-                        }}
-                        className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                        Delete Event
-                    </button>
+                    {canDelete ? (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setOpen(false);
+                                onDeleteRequest(campaign);
+                            }}
+                            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Delete Event
+                        </button>
+                    ) : null}
                 </div>
             )}
         </div>
     );
 }
 
-export function CampaignsClient() {
+export function CampaignsClient({
+    canDeleteEvents,
+}: {
+    canDeleteEvents: boolean;
+}) {
     const router = useRouter();
     const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -135,6 +143,7 @@ export function CampaignsClient() {
     );
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [deletePassword, setDeletePassword] = useState("");
     const [pendingAction, setPendingAction] = useState<{
         campaignId: string;
         type: "draw" | "history";
@@ -181,6 +190,11 @@ export function CampaignsClient() {
 
     const confirmDelete = async () => {
         if (!deleteTarget) return;
+        if (!deletePassword.trim()) {
+            setDeleteError("Delete password is required.");
+            return;
+        }
+
         setIsDeleting(true);
         setDeleteError(null);
 
@@ -189,11 +203,24 @@ export function CampaignsClient() {
                 `/api/v1/campaigns/${deleteTarget.id}`,
                 {
                     method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        password: deletePassword,
+                    }),
                 },
             );
 
             if (!response.ok) {
-                throw new Error("Unable to delete event.");
+                const payload = (await response.json()) as
+                    | { success: false; error: string; code: string }
+                    | { success: true; data: unknown };
+                throw new Error(
+                    "success" in payload && !payload.success
+                        ? payload.error
+                        : "Unable to delete event.",
+                );
             }
 
             // Optimistic: remove from list immediately
@@ -201,8 +228,9 @@ export function CampaignsClient() {
                 prev.filter((c) => c.id !== deleteTarget.id),
             );
             setDeleteTarget(null);
+            setDeletePassword("");
         } catch {
-            setDeleteError("Failed to delete event. Please try again.");
+            setDeleteError("Invalid password or unable to delete event.");
         } finally {
             setIsDeleting(false);
         }
@@ -211,7 +239,7 @@ export function CampaignsClient() {
     return (
         <div className="space-y-8">
             {/* Delete confirm modal */}
-            {deleteTarget && (
+            {deleteTarget && canDeleteEvents && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
                     <div className="w-full max-w-md rounded-[16px] border border-slate-200 bg-white p-6 shadow-xl">
                         <div className="flex items-start justify-between gap-3">
@@ -223,6 +251,7 @@ export function CampaignsClient() {
                                 onClick={() => {
                                     setDeleteTarget(null);
                                     setDeleteError(null);
+                                    setDeletePassword("");
                                 }}
                                 className="text-slate-400 hover:text-slate-600"
                             >
@@ -239,6 +268,24 @@ export function CampaignsClient() {
                             </span>{" "}
                             will be deleted and cannot be recovered.
                         </p>
+                        <div className="mt-3 space-y-1.5">
+                            <label
+                                htmlFor="delete-password"
+                                className="text-sm font-medium text-slate-700"
+                            >
+                                Delete Password (default: Lucky)
+                            </label>
+                            <input
+                                id="delete-password"
+                                type="password"
+                                value={deletePassword}
+                                onChange={(e) =>
+                                    setDeletePassword(e.target.value)
+                                }
+                                className="w-full rounded-[4px] border border-slate-300 px-3 py-2 text-sm outline-none focus:border-rose-400"
+                                placeholder="Enter delete password"
+                            />
+                        </div>
                         {deleteError && (
                             <p className="mt-3 text-sm font-medium text-rose-600">
                                 {deleteError}
@@ -250,6 +297,7 @@ export function CampaignsClient() {
                                 onClick={() => {
                                     setDeleteTarget(null);
                                     setDeleteError(null);
+                                    setDeletePassword("");
                                 }}
                                 disabled={isDeleting}
                                 className="rounded-[4px] border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
@@ -358,6 +406,7 @@ export function CampaignsClient() {
                                     <CardMenu
                                         campaign={campaign}
                                         canEdit={!isCampaignFinished(campaign)}
+                                        canDelete={canDeleteEvents}
                                         onDeleteRequest={setDeleteTarget}
                                     />
                                 </div>

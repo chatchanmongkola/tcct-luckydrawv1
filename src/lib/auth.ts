@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 
 import { authConfig } from "@/lib/auth.config";
+import { createAccessLog } from "@/lib/access-logs";
 import { db } from "@/lib/db";
 import { loginSchema } from "@/lib/validations";
 
@@ -40,6 +41,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     if (!isValidPassword) {
                         return null;
                     }
+
+                    await createAccessLog({
+                        actorId: user.id,
+                        action: "AUTH_LOGIN",
+                        targetType: "user",
+                        targetId: user.id,
+                        metadata: {
+                            username: user.username,
+                        },
+                    });
 
                     return {
                         id: user.id,
