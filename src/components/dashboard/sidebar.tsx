@@ -271,7 +271,7 @@ export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
                             Clear All Data
                         </h3>
                         <p className="mt-2 text-sm text-slate-600">
-                            Enter password Lucky888 to confirm soft-delete all
+                            Enter clear-data password to confirm soft-delete all
                             events.
                         </p>
 
@@ -290,7 +290,7 @@ export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
                                     setClearPassword(event.target.value)
                                 }
                                 className="w-full rounded-[6px] border border-slate-300 px-3 py-2 text-sm outline-none focus:border-rose-400"
-                                placeholder="Enter Lucky888"
+                                placeholder="Enter clear-data password"
                             />
                         </div>
 

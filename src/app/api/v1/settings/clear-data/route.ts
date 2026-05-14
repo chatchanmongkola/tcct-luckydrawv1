@@ -3,6 +3,7 @@ import { createAccessLog } from "@/lib/access-logs";
 import { fail, ok } from "@/lib/api-response";
 import { db } from "@/lib/db";
 import { isStaffRole } from "@/lib/roles";
+import { securityConfig } from "@/lib/security-config";
 
 export async function POST(request: Request) {
     try {
@@ -24,8 +25,7 @@ export async function POST(request: Request) {
         const body = await request.json().catch(() => null);
         const password =
             typeof body?.password === "string" ? body.password.trim() : "";
-        const clearDataPassword =
-            process.env.CLEAR_ALL_DATA_PASSWORD ?? "Lucky888";
+        const clearDataPassword = securityConfig.clearAllDataPassword;
 
         if (!password) {
             return fail(

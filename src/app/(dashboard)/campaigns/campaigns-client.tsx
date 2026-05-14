@@ -273,7 +273,7 @@ export function CampaignsClient({
                                 htmlFor="delete-password"
                                 className="text-sm font-medium text-slate-700"
                             >
-                                Delete Password (default: Lucky)
+                                Delete password
                             </label>
                             <input
                                 id="delete-password"

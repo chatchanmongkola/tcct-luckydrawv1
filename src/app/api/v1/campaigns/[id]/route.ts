@@ -3,6 +3,7 @@ import { createAccessLogSafe } from "@/lib/access-logs";
 import { fail, ok } from "@/lib/api-response";
 import { deleteCampaign, getCampaign, updateCampaign } from "@/lib/campaigns";
 import { isStaffRole } from "@/lib/roles";
+import { securityConfig } from "@/lib/security-config";
 import { updateCampaignSchema } from "@/lib/validations";
 
 type Params = { params: Promise<{ id: string }> };
@@ -99,7 +100,7 @@ export async function DELETE(_req: Request, { params }: Params) {
         const body = await _req.json().catch(() => null);
         const password =
             typeof body?.password === "string" ? body.password.trim() : "";
-        const deletePassword = process.env.DELETE_EVENT_PASSWORD ?? "Lucky";
+        const deletePassword = securityConfig.deleteEventPassword;
 
         if (!password) {
             return fail("Delete password is required.", "PASSWORD_REQUIRED", {
