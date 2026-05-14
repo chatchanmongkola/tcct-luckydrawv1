@@ -4,11 +4,10 @@
  */
 
 export function isExpiredAt(
-    expiresAt: string | Date | null | undefined
+    expiresAt: string | Date | null | undefined,
 ): boolean {
     if (!expiresAt) return false;
-    const date =
-        expiresAt instanceof Date ? expiresAt : new Date(expiresAt);
+    const date = expiresAt instanceof Date ? expiresAt : new Date(expiresAt);
     if (Number.isNaN(date.getTime())) return false;
     return date.getTime() <= Date.now();
 }

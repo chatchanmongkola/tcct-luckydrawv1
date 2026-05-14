@@ -14,16 +14,16 @@ datasource db {
 
 // ===== User =====
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  username  String   @unique
+  id        String    @id @default(uuid()) @db.Uuid
+  email     String    @unique
+  username  String    @unique
   password  String
   name      String?
-  role      String   @default("USER")
+  role      String    @default("USER")
   expiresAt DateTime? @map("expires_at")
-  isDeleted Boolean  @default(false) @map("is_deleted")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
 
   @@map("users")
 }

@@ -22,7 +22,8 @@ function generateClientPassword(length = 8) {
     const symbols = "!@#$%^&*()-_=+[]{};:,.?";
     const all = `${lower}${upper}${nums}${symbols}`;
 
-    const pick = (pool: string) => pool[Math.floor(Math.random() * pool.length)];
+    const pick = (pool: string) =>
+        pool[Math.floor(Math.random() * pool.length)];
 
     const chars = [pick(lower), pick(upper), pick(nums), pick(symbols)];
     for (let i = chars.length; i < length; i += 1) {
@@ -75,12 +76,16 @@ export function UsersClient() {
                 | ApiError;
 
             if (!response.ok || !payload.success) {
-                throw new Error(payload.success ? "Failed to load users." : payload.error);
+                throw new Error(
+                    payload.success ? "Failed to load users." : payload.error,
+                );
             }
 
             setUsers(payload.data);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to load users.");
+            setError(
+                err instanceof Error ? err.message : "Failed to load users.",
+            );
         } finally {
             setIsLoading(false);
         }
@@ -139,13 +144,17 @@ export function UsersClient() {
                 | ApiError;
 
             if (!response.ok || !json.success) {
-                throw new Error(json.success ? "Failed to save user." : json.error);
+                throw new Error(
+                    json.success ? "Failed to save user." : json.error,
+                );
             }
 
             await loadUsers();
             resetForm();
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to save user.");
+            setError(
+                err instanceof Error ? err.message : "Failed to save user.",
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -175,7 +184,9 @@ export function UsersClient() {
                 | ApiError;
 
             if (!response.ok || !json.success) {
-                throw new Error(json.success ? "Failed to delete user." : json.error);
+                throw new Error(
+                    json.success ? "Failed to delete user." : json.error,
+                );
             }
 
             await loadUsers();
@@ -183,7 +194,9 @@ export function UsersClient() {
                 resetForm();
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to delete user.");
+            setError(
+                err instanceof Error ? err.message : "Failed to delete user.",
+            );
         } finally {
             setIsDeletingId(null);
         }
@@ -192,9 +205,12 @@ export function UsersClient() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-black text-slate-950">User Management</h1>
+                <h1 className="text-3xl font-black text-slate-950">
+                    User Management
+                </h1>
                 <p className="mt-1 text-sm text-slate-500">
-                    ADMIN only: create, edit, delete users and manage account expiry.
+                    ADMIN only: create, edit, delete users and manage account
+                    expiry.
                 </p>
             </div>
 
@@ -206,7 +222,9 @@ export function UsersClient() {
 
             <section className="space-y-4 rounded-[16px] border border-slate-200 bg-white p-5 shadow-sm">
                 <h2 className="text-lg font-bold text-slate-900">
-                    {editingUser ? `Edit User: ${editingUser.username}` : "Create User"}
+                    {editingUser
+                        ? `Edit User: ${editingUser.username}`
+                        : "Create User"}
                 </h2>
 
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -234,7 +252,9 @@ export function UsersClient() {
                             />
                             <button
                                 type="button"
-                                onClick={() => setPassword(generateClientPassword(8))}
+                                onClick={() =>
+                                    setPassword(generateClientPassword(8))
+                                }
                                 className="rounded-[6px] border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                             >
                                 Auto gen 8
@@ -257,7 +277,9 @@ export function UsersClient() {
                     </label>
 
                     <label className="space-y-1.5 text-sm text-slate-700">
-                        <span className="font-medium">Expire Date (optional)</span>
+                        <span className="font-medium">
+                            Expire Date (optional)
+                        </span>
                         <input
                             type="date"
                             value={expiresAt}
@@ -274,7 +296,11 @@ export function UsersClient() {
                         disabled={isSubmitting}
                         className="rounded-[6px] border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                     >
-                        {isSubmitting ? "Saving..." : editingUser ? "Update User" : "Create User"}
+                        {isSubmitting
+                            ? "Saving..."
+                            : editingUser
+                              ? "Update User"
+                              : "Create User"}
                     </button>
 
                     {editingUser ? (
@@ -296,51 +322,82 @@ export function UsersClient() {
                     <table className="min-w-full border-collapse text-left text-sm">
                         <thead className="bg-slate-50 text-slate-700">
                             <tr>
-                                <th className="px-3 py-2 font-semibold">Username</th>
-                                <th className="px-3 py-2 font-semibold">Role</th>
-                                <th className="px-3 py-2 font-semibold">Expire Date</th>
-                                <th className="px-3 py-2 font-semibold">Actions</th>
+                                <th className="px-3 py-2 font-semibold">
+                                    Username
+                                </th>
+                                <th className="px-3 py-2 font-semibold">
+                                    Role
+                                </th>
+                                <th className="px-3 py-2 font-semibold">
+                                    Expire Date
+                                </th>
+                                <th className="px-3 py-2 font-semibold">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={4} className="px-3 py-8 text-center text-slate-500">
+                                    <td
+                                        colSpan={4}
+                                        className="px-3 py-8 text-center text-slate-500"
+                                    >
                                         Loading users...
                                     </td>
                                 </tr>
                             ) : users.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-3 py-8 text-center text-slate-500">
+                                    <td
+                                        colSpan={4}
+                                        className="px-3 py-8 text-center text-slate-500"
+                                    >
                                         No users found.
                                     </td>
                                 </tr>
                             ) : (
                                 users.map((user) => (
-                                    <tr key={user.id} className="border-t border-slate-100">
-                                        <td className="px-3 py-2">{user.username}</td>
-                                        <td className="px-3 py-2">{user.role}</td>
+                                    <tr
+                                        key={user.id}
+                                        className="border-t border-slate-100"
+                                    >
+                                        <td className="px-3 py-2">
+                                            {user.username}
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            {user.role}
+                                        </td>
                                         <td className="px-3 py-2">
                                             {user.expiresAt
-                                                ? new Date(user.expiresAt).toLocaleDateString("en-GB")
+                                                ? new Date(
+                                                      user.expiresAt,
+                                                  ).toLocaleDateString("en-GB")
                                                 : "No expiry"}
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="flex gap-2">
                                                 <button
                                                     type="button"
-                                                    onClick={() => startEdit(user)}
+                                                    onClick={() =>
+                                                        startEdit(user)
+                                                    }
                                                     className="rounded-[6px] border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                                                 >
                                                     Edit
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => void removeUser(user.id)}
-                                                    disabled={isDeletingId === user.id}
+                                                    onClick={() =>
+                                                        void removeUser(user.id)
+                                                    }
+                                                    disabled={
+                                                        isDeletingId === user.id
+                                                    }
                                                     className="rounded-[6px] border border-rose-300 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
                                                 >
-                                                    {isDeletingId === user.id ? "Deleting..." : "Delete"}
+                                                    {isDeletingId === user.id
+                                                        ? "Deleting..."
+                                                        : "Delete"}
                                                 </button>
                                             </div>
                                         </td>

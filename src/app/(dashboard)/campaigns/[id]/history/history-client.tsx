@@ -90,20 +90,27 @@ export function HistoryClient({
         setError(null);
 
         try {
-            const response = await fetch(`/api/v1/campaigns/${campaignId}/history`, {
-                cache: "no-store",
-            });
+            const response = await fetch(
+                `/api/v1/campaigns/${campaignId}/history`,
+                {
+                    cache: "no-store",
+                },
+            );
             const payload = (await response.json()) as
                 | ApiSuccess<HistoryData>
                 | ApiError;
 
             if (!response.ok || !payload.success) {
-                throw new Error(payload.success ? "Unknown error" : payload.error);
+                throw new Error(
+                    payload.success ? "Unknown error" : payload.error,
+                );
             }
 
             setData(payload.data);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to load history.");
+            setError(
+                err instanceof Error ? err.message : "Failed to load history.",
+            );
         } finally {
             setIsLoading(false);
         }
@@ -310,8 +317,8 @@ export function HistoryClient({
                           name: "No winner yet",
                           mobile: "",
                           drawnAt: "",
-                              drawSessionId: "",
-                              nonce: "",
+                          drawSessionId: "",
+                          nonce: "",
                       },
                   ];
 
@@ -493,19 +500,27 @@ export function HistoryClient({
                                         className="rounded-md border border-slate-200 bg-white p-2"
                                     >
                                         <p>
-                                            <span className="font-semibold text-slate-800">Session:</span>{" "}
+                                            <span className="font-semibold text-slate-800">
+                                                Session:
+                                            </span>{" "}
                                             {session.id}
                                         </p>
                                         <p>
-                                            <span className="font-semibold text-slate-800">Nonce:</span>{" "}
+                                            <span className="font-semibold text-slate-800">
+                                                Nonce:
+                                            </span>{" "}
                                             {session.nonce}
                                         </p>
                                         <p>
-                                            <span className="font-semibold text-slate-800">Drawn At:</span>{" "}
+                                            <span className="font-semibold text-slate-800">
+                                                Drawn At:
+                                            </span>{" "}
                                             {formatTimestamp(session.drawnAt)}
                                         </p>
                                         <p>
-                                            <span className="font-semibold text-slate-800">Winners:</span>{" "}
+                                            <span className="font-semibold text-slate-800">
+                                                Winners:
+                                            </span>{" "}
                                             {session.winnerCount}
                                         </p>
                                     </div>

@@ -15,9 +15,13 @@ export async function GET(request: Request) {
         }
 
         if (isStaffRole(session.user.role)) {
-            return fail("You do not have permission to access settings.", "FORBIDDEN", {
-                status: 403,
-            });
+            return fail(
+                "You do not have permission to access settings.",
+                "FORBIDDEN",
+                {
+                    status: 403,
+                },
+            );
         }
 
         const url = new URL(request.url);
@@ -26,7 +30,8 @@ export async function GET(request: Request) {
         const page = Number(url.searchParams.get("page") ?? "1");
         const pageSize = Number(url.searchParams.get("pageSize") ?? "50");
 
-        const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+        const safePage =
+            Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
         const safePageSize =
             Number.isFinite(pageSize) && pageSize > 0
                 ? Math.min(Math.floor(pageSize), 200)

@@ -57,9 +57,9 @@ function formatTime(value: string | Date) {
 export function AccessLogsClient() {
     const [rows, setRows] = useState<AccessLogRow[]>([]);
     const [actions, setActions] = useState<string[]>([]);
-    const [users, setUsers] = useState<Array<{ actorId: string; label: string }>>(
-        [],
-    );
+    const [users, setUsers] = useState<
+        Array<{ actorId: string; label: string }>
+    >([]);
     const [selectedAction, setSelectedAction] = useState("");
     const [selectedActorId, setSelectedActorId] = useState("");
     const [page, setPage] = useState(1);
@@ -83,13 +83,22 @@ export function AccessLogsClient() {
         setError(null);
 
         try {
-            const response = await fetch(`/api/v1/settings/access-logs?${queryString}`, {
-                cache: "no-store",
-            });
+            const response = await fetch(
+                `/api/v1/settings/access-logs?${queryString}`,
+                {
+                    cache: "no-store",
+                },
+            );
 
-            const payload = (await response.json()) as AccessLogListResponse | ApiError;
+            const payload = (await response.json()) as
+                | AccessLogListResponse
+                | ApiError;
             if (!response.ok || !payload.success) {
-                throw new Error(payload.success ? "Failed to load access logs." : payload.error);
+                throw new Error(
+                    payload.success
+                        ? "Failed to load access logs."
+                        : payload.error,
+                );
             }
 
             setRows(payload.data.rows);
@@ -98,7 +107,11 @@ export function AccessLogsClient() {
             setTotal(payload.data.total);
             setTotalPages(payload.data.totalPages);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to load access logs.");
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Failed to load access logs.",
+            );
         } finally {
             setIsLoading(false);
         }
@@ -126,7 +139,9 @@ export function AccessLogsClient() {
 
             if (!response.ok) {
                 const payload = (await response.json()) as ApiError;
-                throw new Error(payload.error || "Failed to export access logs.");
+                throw new Error(
+                    payload.error || "Failed to export access logs.",
+                );
             }
 
             const blob = await response.blob();
@@ -137,7 +152,11 @@ export function AccessLogsClient() {
             link.click();
             URL.revokeObjectURL(url);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to export access logs.");
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Failed to export access logs.",
+            );
         } finally {
             setIsExporting(false);
         }
@@ -147,7 +166,9 @@ export function AccessLogsClient() {
         <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-950">Access Logs</h1>
+                    <h1 className="text-3xl font-black text-slate-950">
+                        Access Logs
+                    </h1>
                     <p className="mt-1 text-sm text-slate-500">
                         Review all system actions and export by current filter.
                     </p>
@@ -230,18 +251,32 @@ export function AccessLogsClient() {
                     </div>
                 </div>
 
-                <div className="text-sm text-slate-500">Total {total} records</div>
+                <div className="text-sm text-slate-500">
+                    Total {total} records
+                </div>
 
                 <div className="overflow-x-auto rounded-[10px] border border-slate-200">
                     <table className="min-w-full border-collapse text-left text-sm">
                         <thead className="bg-slate-50 text-slate-700">
                             <tr>
-                                <th className="px-3 py-2 font-semibold">Time</th>
-                                <th className="px-3 py-2 font-semibold">Action</th>
-                                <th className="px-3 py-2 font-semibold">User</th>
-                                <th className="px-3 py-2 font-semibold">Campaign</th>
-                                <th className="px-3 py-2 font-semibold">Target</th>
-                                <th className="px-3 py-2 font-semibold">Metadata</th>
+                                <th className="px-3 py-2 font-semibold">
+                                    Time
+                                </th>
+                                <th className="px-3 py-2 font-semibold">
+                                    Action
+                                </th>
+                                <th className="px-3 py-2 font-semibold">
+                                    User
+                                </th>
+                                <th className="px-3 py-2 font-semibold">
+                                    Campaign
+                                </th>
+                                <th className="px-3 py-2 font-semibold">
+                                    Target
+                                </th>
+                                <th className="px-3 py-2 font-semibold">
+                                    Metadata
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -291,7 +326,9 @@ export function AccessLogsClient() {
                                         </td>
                                         <td className="px-3 py-2 text-xs text-slate-500">
                                             <pre className="max-w-[360px] overflow-x-auto whitespace-pre-wrap break-all">
-                                                {JSON.stringify(row.metadata ?? null)}
+                                                {JSON.stringify(
+                                                    row.metadata ?? null,
+                                                )}
                                             </pre>
                                         </td>
                                     </tr>

@@ -9,7 +9,9 @@ export default function HistoryError({
 }) {
     return (
         <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-rose-800">History Page Error</h2>
+            <h2 className="text-lg font-bold text-rose-800">
+                History Page Error
+            </h2>
             <p className="mt-2 text-sm text-rose-700">{error.message}</p>
             <button
                 type="button"

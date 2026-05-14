@@ -16,9 +16,7 @@ interface SidebarProps {
     onClose: () => void;
 }
 
-const navItems = [
-    { href: "/campaigns", label: "Events", icon: Calendar },
-];
+const navItems = [{ href: "/campaigns", label: "Events", icon: Calendar }];
 
 export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
@@ -98,10 +96,10 @@ export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
             );
             setIsClearModalOpen(false);
             setClearPassword("");
-            
+
             // Reload the campaigns page to show updated data
             setTimeout(() => {
-                router.push('/campaigns');
+                router.push("/campaigns");
             }, 500);
         } catch (error) {
             setActionError(
@@ -219,7 +217,9 @@ export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
                                             onClick={onClose}
                                             className={cn(
                                                 "block rounded-[4px] px-2 py-1.5 text-sm transition-colors",
-                                                pathname.startsWith("/settings/users")
+                                                pathname.startsWith(
+                                                    "/settings/users",
+                                                )
                                                     ? "bg-slate-100 font-semibold text-slate-900"
                                                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
                                             )}
@@ -271,7 +271,8 @@ export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
                             Clear All Data
                         </h3>
                         <p className="mt-2 text-sm text-slate-600">
-                            Enter password Lucky888 to confirm soft-delete all events.
+                            Enter password Lucky888 to confirm soft-delete all
+                            events.
                         </p>
 
                         <div className="mt-4 space-y-1.5">
@@ -294,7 +295,9 @@ export function DashboardSidebar({ user, isOpen, onClose }: SidebarProps) {
                         </div>
 
                         {actionError ? (
-                            <p className="mt-3 text-sm text-rose-700">{actionError}</p>
+                            <p className="mt-3 text-sm text-rose-700">
+                                {actionError}
+                            </p>
                         ) : null}
 
                         <div className="mt-4 flex justify-end gap-2">

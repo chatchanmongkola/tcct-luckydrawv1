@@ -128,7 +128,9 @@ function normalizeAccessLogFilters(filters?: AccessLogFilters) {
     return { action, actorId };
 }
 
-export async function countAccessLogs(filters?: AccessLogFilters): Promise<number> {
+export async function countAccessLogs(
+    filters?: AccessLogFilters,
+): Promise<number> {
     await ensureAccessLogsTable();
 
     const normalized = normalizeAccessLogFilters(filters);

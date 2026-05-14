@@ -52,7 +52,9 @@ export async function GET() {
         );
     } catch (error) {
         console.error("Failed to list users", error);
-        return fail("Failed to load users.", "USER_LIST_FAILED", { status: 500 });
+        return fail("Failed to load users.", "USER_LIST_FAILED", {
+            status: 500,
+        });
     }
 }
 
@@ -85,7 +87,9 @@ export async function POST(request: Request) {
         });
 
         if (exists) {
-            return fail("Username already exists.", "USERNAME_EXISTS", { status: 409 });
+            return fail("Username already exists.", "USERNAME_EXISTS", {
+                status: 409,
+            });
         }
 
         const hashed = await bcrypt.hash(parsed.data.password, 12);
@@ -136,6 +140,8 @@ export async function POST(request: Request) {
         );
     } catch (error) {
         console.error("Failed to create user", error);
-        return fail("Failed to create user.", "USER_CREATE_FAILED", { status: 500 });
+        return fail("Failed to create user.", "USER_CREATE_FAILED", {
+            status: 500,
+        });
     }
 }

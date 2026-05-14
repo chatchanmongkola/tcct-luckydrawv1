@@ -521,7 +521,9 @@ export function DrawClient({
                                         <span className="font-semibold text-slate-800">
                                             Drawn At:
                                         </span>{" "}
-                                        {new Date(lastAudit.drawnAt).toLocaleString("en-GB")}
+                                        {new Date(
+                                            lastAudit.drawnAt,
+                                        ).toLocaleString("en-GB")}
                                     </p>
                                     <p>
                                         <span className="font-semibold text-slate-800">
