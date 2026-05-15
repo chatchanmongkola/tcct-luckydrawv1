@@ -26,7 +26,9 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
     const [eventDate, setEventDate] = useState(
         toDateInputValue(campaign.startsAt),
     );
-    const [bannerPreview, setBannerPreview] = useState<string | null>(existingBannerUrl);
+    const [bannerPreview, setBannerPreview] = useState<string | null>(
+        existingBannerUrl,
+    );
     const [bannerFile, setBannerFile] = useState<File | null>(null);
     const [bannerCleared, setBannerCleared] = useState(false);
     const [error, setError] = useState<string | null>(null);
