@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ImagePlus, X } from "lucide-react";
 
 import type { CampaignSummary } from "@/lib/campaigns";
+import { uploadCampaignBanner } from "@/lib/banner-upload";
 
 // Extract date portion (YYYY-MM-DD) from ISO string for date input
 function toDateInputValue(iso: string | null): string {
@@ -15,18 +16,19 @@ function toDateInputValue(iso: string | null): string {
 
 export function EditForm({ campaign }: { campaign: CampaignSummary }) {
     const router = useRouter();
+    const existingBannerUrl =
+        campaign.bannerUrl && !campaign.bannerUrl.startsWith("local://")
+            ? campaign.bannerUrl
+            : null;
 
     const [title, setTitle] = useState(campaign.title);
     const [description, setDescription] = useState(campaign.description ?? "");
     const [eventDate, setEventDate] = useState(
         toDateInputValue(campaign.startsAt),
     );
-    const [bannerPreview, setBannerPreview] = useState<string | null>(
-        campaign.bannerUrl && !campaign.bannerUrl.startsWith("local://")
-            ? campaign.bannerUrl
-            : null,
-    );
+    const [bannerPreview, setBannerPreview] = useState<string | null>(existingBannerUrl);
     const [bannerFile, setBannerFile] = useState<File | null>(null);
+    const [bannerCleared, setBannerCleared] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,7 +43,18 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
         }
         setError(null);
         setBannerFile(file);
+        setBannerCleared(false);
         setBannerPreview(URL.createObjectURL(file));
+    };
+
+    const onBannerClear = () => {
+        if (bannerFile && bannerPreview) {
+            URL.revokeObjectURL(bannerPreview);
+        }
+
+        setBannerFile(null);
+        setBannerCleared(true);
+        setBannerPreview(null);
     };
 
     const onSave = async () => {
@@ -54,6 +67,12 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
         setError(null);
 
         try {
+            const bannerUrl = bannerCleared
+                ? null
+                : bannerFile
+                  ? await uploadCampaignBanner(bannerFile)
+                  : existingBannerUrl;
+
             const response = await fetch(`/api/v1/campaigns/${campaign.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -66,9 +85,7 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
                     endsAt: eventDate
                         ? new Date(eventDate).toISOString()
                         : null,
-                    bannerUrl: bannerFile
-                        ? `local://${bannerFile.name}`
-                        : campaign.bannerUrl,
+                    bannerUrl,
                 }),
             });
 
@@ -176,12 +193,7 @@ export function EditForm({ campaign }: { campaign: CampaignSummary }) {
                             />
                             <button
                                 type="button"
-                                onClick={() => {
-                                    if (bannerFile && bannerPreview)
-                                        URL.revokeObjectURL(bannerPreview);
-                                    setBannerFile(null);
-                                    setBannerPreview(null);
-                                }}
+                                onClick={onBannerClear}
                                 className="absolute right-2 top-2 rounded-[4px] bg-white/90 p-1.5 text-slate-700"
                             >
                                 <X className="h-4 w-4" />

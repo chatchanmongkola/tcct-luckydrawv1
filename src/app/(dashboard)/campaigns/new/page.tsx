@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileText, ImagePlus, Trash2, Upload, X } from "lucide-react";
 
+import { uploadCampaignBanner } from "@/lib/banner-upload";
+
 type ParticipantRow = {
     employee_id: string;
     name: string;
@@ -199,6 +201,10 @@ export default function NewCampaignPage() {
         setError(null);
 
         try {
+            const bannerUrl = bannerFile
+                ? await uploadCampaignBanner(bannerFile)
+                : null;
+
             const response = await fetch("/api/v1/campaigns", {
                 method: "POST",
                 headers: {
@@ -213,7 +219,7 @@ export default function NewCampaignPage() {
                     endsAt: eventDate
                         ? new Date(eventDate).toISOString()
                         : null,
-                    bannerUrl: bannerFile ? `local://${bannerFile.name}` : null,
+                    bannerUrl,
                     participants,
                     prizeTiers: prizeTiers.map((tier, index) => ({
                         tierName: tier.tierName,
