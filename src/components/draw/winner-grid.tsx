@@ -60,9 +60,7 @@ export function WinnerGrid({
                 return Array.from({ length: drawCount }, (_, index) => {
                     const candidate =
                         drawingCandidates[
-                            Math.floor(
-                                Math.random() * drawingCandidates.length,
-                            )
+                            Math.floor(Math.random() * drawingCandidates.length)
                         ];
 
                     return {
