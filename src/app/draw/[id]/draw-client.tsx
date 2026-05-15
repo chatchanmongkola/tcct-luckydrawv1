@@ -423,11 +423,12 @@ export function DrawClient({
     };
 
     const bannerUrl = overview?.campaign.bannerUrl ?? initialBannerUrl;
+    const hasBanner = isUsableBanner(bannerUrl);
 
     return (
         <div className="min-h-screen bg-slate-100 pb-8">
-            <header className="relative h-[150px] max-h-[150px] w-full overflow-hidden bg-slate-900">
-                {isUsableBanner(bannerUrl) ? (
+            {hasBanner ? (
+                <header className="relative h-[150px] max-h-[150px] w-full overflow-hidden bg-slate-900">
                     <Image
                         src={bannerUrl as string}
                         alt="Campaign banner"
@@ -435,12 +436,13 @@ export function DrawClient({
                         className="object-cover"
                         priority
                     />
-                ) : (
-                    <div className="h-full w-full bg-[radial-gradient(circle_at_top_left,_#334155,_#0f172a_55%,_#020617)]" />
-                )}
 
-                <div className="absolute inset-0 bg-black/35" />
-                <div className="absolute left-4 right-4 top-4 flex justify-end">
+                    <div className="absolute inset-0 bg-black/35" />
+                </header>
+            ) : null}
+
+            <main className="mx-auto mt-5 w-full max-w-6xl space-y-4 px-4">
+                <section className="flex justify-end">
                     <button
                         type="button"
                         onClick={() => {
@@ -448,14 +450,12 @@ export function DrawClient({
                             router.refresh();
                         }}
                         aria-label="Close draw"
-                        className="rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
+                        className="rounded-full bg-slate-900 p-2 text-white transition-colors hover:bg-slate-800"
                     >
                         <X className="h-5 w-5" />
                     </button>
-                </div>
-            </header>
+                </section>
 
-            <main className="mx-auto mt-5 w-full max-w-6xl space-y-4 px-4">
                 {isLoading ? (
                     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                         <p className="text-sm text-slate-500">
