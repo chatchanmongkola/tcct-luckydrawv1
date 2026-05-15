@@ -12,6 +12,11 @@ type DrawWinner = {
     mobile: string | null;
 };
 
+type EligiblePreviewParticipant = {
+    participantId: string;
+    employeeId: string;
+};
+
 type DrawTier = {
     id: string;
     tierName: string;
@@ -27,7 +32,7 @@ type DrawPanelProps = {
     mode: "ready" | "drawing" | "result" | "complete";
     isSubmitting: boolean;
     winners: DrawWinner[];
-    rollingCandidates: DrawWinner[];
+    drawingCandidates: EligiblePreviewParticipant[];
     slotStart: number;
     error: string | null;
     hasShownAllWinners: boolean;
@@ -42,7 +47,7 @@ export function DrawPanel({
     mode,
     isSubmitting,
     winners,
-    rollingCandidates,
+    drawingCandidates,
     slotStart,
     error,
     hasShownAllWinners,
@@ -133,7 +138,7 @@ export function DrawPanel({
             <div className="mt-6" id="winner-capture-area">
                 <WinnerGrid
                     winners={winners}
-                    rollingCandidates={rollingCandidates}
+                    drawingCandidates={drawingCandidates}
                     drawCount={drawCount}
                     slotStart={effectiveSlotStart}
                     mode={mode}

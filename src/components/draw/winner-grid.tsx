@@ -9,9 +9,14 @@ type DrawWinner = {
     mobile: string | null;
 };
 
+type EligiblePreviewParticipant = {
+    participantId: string;
+    employeeId: string;
+};
+
 type WinnerGridProps = {
     winners: DrawWinner[];
-    rollingCandidates: DrawWinner[];
+    drawingCandidates: EligiblePreviewParticipant[];
     drawCount: number;
     slotStart: number;
     mode: "ready" | "drawing" | "result" | "complete";
@@ -24,7 +29,7 @@ function randomEmployeeId() {
 
 export function WinnerGrid({
     winners,
-    rollingCandidates,
+    drawingCandidates,
     drawCount,
     slotStart,
     mode,
@@ -50,27 +55,31 @@ export function WinnerGrid({
 
     const display = useMemo(() => {
         if (mode === "drawing") {
-            if (rollingCandidates.length > 0) {
+            if (drawingCandidates.length > 0) {
+                // วิ่งจาก eligible preview จริง, แสดงเฉพาะ employeeId
                 return Array.from({ length: drawCount }, (_, index) => {
                     const candidate =
-                        rollingCandidates[
-                            Math.floor(Math.random() * rollingCandidates.length)
+                        drawingCandidates[
+                            Math.floor(
+                                Math.random() * drawingCandidates.length,
+                            )
                         ];
 
                     return {
                         participantId: `rolling-${index}-${candidate.participantId}`,
                         employeeId: candidate.employeeId,
-                        name: candidate.name,
-                        mobile: candidate.mobile,
+                        name: null,
+                        mobile: null,
                     };
                 });
             }
 
+            // fallback ก่อนที่ eligible preview จะมาถึง (ระหว่าง round trip)
             return rollingIds.map((employeeId, index) => ({
                 participantId: `rolling-${index}`,
                 employeeId,
-                name: "---",
-                mobile: "",
+                name: null,
+                mobile: null,
             }));
         }
 
@@ -79,10 +88,10 @@ export function WinnerGrid({
         return Array.from({ length: drawCount }, (_, index) => ({
             participantId: `empty-${index}`,
             employeeId: "----",
-            name: "Waiting",
-            mobile: "",
+            name: null,
+            mobile: null,
         }));
-    }, [drawCount, mode, rollingCandidates, rollingIds, winners]);
+    }, [drawCount, drawingCandidates, mode, rollingIds, winners]);
 
     return (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">

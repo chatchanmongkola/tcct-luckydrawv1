@@ -52,6 +52,11 @@ export type DrawWinner = {
     mobile: string | null;
 };
 
+export type EligiblePreviewParticipant = {
+    participantId: string;
+    employeeId: string;
+};
+
 export type ExecuteDrawResult = {
     sessionId: string;
     prizeTierId: string;
@@ -66,6 +71,7 @@ export type ExecuteDrawResult = {
         eligibleCountBeforeDraw: number;
     };
     winners: DrawWinner[];
+    eligiblePreview: EligiblePreviewParticipant[];
 };
 
 export type CampaignHistoryTier = {
@@ -347,6 +353,7 @@ export async function executeDraw(
         return {
             session: createdSession,
             winners,
+            eligibleParticipants,
             drawCount,
             remainingAfter: Math.max(0, remaining - drawCount),
             eligibleCountBeforeDraw: eligibleParticipants.length,
@@ -371,6 +378,10 @@ export async function executeDraw(
             employeeId: winner.employeeId,
             name: winner.name,
             mobile: winner.mobile,
+        })),
+        eligiblePreview: txResult.eligibleParticipants.map((p) => ({
+            participantId: p.id,
+            employeeId: p.employeeId,
         })),
     };
 }

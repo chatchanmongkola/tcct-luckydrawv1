@@ -39,6 +39,11 @@ type DrawWinner = {
     mobile: string | null;
 };
 
+type EligiblePreviewParticipant = {
+    participantId: string;
+    employeeId: string;
+};
+
 type DrawResponse = {
     sessionId: string;
     prizeTierId: string;
@@ -53,6 +58,7 @@ type DrawResponse = {
         eligibleCountBeforeDraw: number;
     };
     winners: DrawWinner[];
+    eligiblePreview: EligiblePreviewParticipant[];
 };
 
 type ApiSuccess<T> = { success: true; data: T };
@@ -86,9 +92,9 @@ export function DrawClient({
         "ready" | "drawing" | "result" | "complete"
     >("ready");
     const [winners, setWinners] = useState<DrawWinner[]>([]);
-    const [rollingCandidates, setRollingCandidates] = useState<DrawWinner[]>(
-        [],
-    );
+    const [drawingCandidates, setDrawingCandidates] = useState<
+        EligiblePreviewParticipant[]
+    >([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -227,7 +233,7 @@ export function DrawClient({
         setError(null);
         setMode("drawing");
         setWinners([]);
-        setRollingCandidates([]);
+        setDrawingCandidates([]);
         setHasShownAllWinners(false);
         setCurrentBatchSlotStart(selectedTier.wonCount + 1);
 
@@ -254,10 +260,12 @@ export function DrawClient({
                 );
             }
 
-            setRollingCandidates(payload.data.winners);
+            setDrawingCandidates(payload.data.eligiblePreview);
 
             const elapsed = Date.now() - drawStartedAt;
-            const minAnimation = 1800;
+            // กรณี eligible เหลือ 1 คน ให้วิ่งสั้น 1-1.5 วินาที, ปกติ 2.5 วินาที
+            const minAnimation =
+                payload.data.audit.eligibleCountBeforeDraw <= 1 ? 1200 : 2500;
             if (elapsed < minAnimation) {
                 await new Promise((resolve) => {
                     window.setTimeout(resolve, minAnimation - elapsed);
@@ -265,13 +273,13 @@ export function DrawClient({
             }
 
             setWinners(payload.data.winners);
-            setRollingCandidates([]);
+            setDrawingCandidates([]);
             setMode(payload.data.remaining === 0 ? "complete" : "result");
             setLastAudit(payload.data.audit);
             await loadState();
         } catch (err) {
             setError(err instanceof Error ? err.message : "Draw failed.");
-            setRollingCandidates([]);
+            setDrawingCandidates([]);
             setCurrentBatchSlotStart(null);
             setMode("ready");
         } finally {
@@ -299,7 +307,7 @@ export function DrawClient({
             }
 
             setWinners(payload.data);
-            setRollingCandidates([]);
+            setDrawingCandidates([]);
             setMode("complete");
             setHasShownAllWinners(true);
             setCurrentBatchSlotStart(1);
@@ -513,7 +521,7 @@ export function DrawClient({
                             mode={mode}
                             isSubmitting={isSubmitting}
                             winners={winners}
-                            rollingCandidates={rollingCandidates}
+                            drawingCandidates={drawingCandidates}
                             slotStart={slotStart}
                             error={error}
                             hasShownAllWinners={hasShownAllWinners}
