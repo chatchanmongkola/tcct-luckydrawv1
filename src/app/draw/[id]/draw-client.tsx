@@ -523,7 +523,7 @@ export function DrawClient({
                             onExportJpg={() => void exportWinnersJpg()}
                         />
 
-                        {/* {lastAudit ? (
+                        {lastAudit ? (
                             <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                                 <h3 className="text-sm font-bold text-slate-900">
                                     Last Draw Audit
@@ -563,7 +563,7 @@ export function DrawClient({
                                     </p>
                                 </div>
                             </section>
-                        ) : null} */}
+                        ) : null}
                     </>
                 )}
             </main>
