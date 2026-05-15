@@ -8,8 +8,8 @@ import { WinnerGrid } from "@/components/draw/winner-grid";
 type DrawWinner = {
     participantId: string;
     employeeId: string;
-    name: string;
-    mobile: string;
+    name: string | null;
+    mobile: string | null;
 };
 
 type DrawTier = {
@@ -27,6 +27,7 @@ type DrawPanelProps = {
     mode: "ready" | "drawing" | "result" | "complete";
     isSubmitting: boolean;
     winners: DrawWinner[];
+    rollingCandidates: DrawWinner[];
     slotStart: number;
     error: string | null;
     hasShownAllWinners: boolean;
@@ -41,6 +42,7 @@ export function DrawPanel({
     mode,
     isSubmitting,
     winners,
+    rollingCandidates,
     slotStart,
     error,
     hasShownAllWinners,
@@ -131,6 +133,7 @@ export function DrawPanel({
             <div className="mt-6" id="winner-capture-area">
                 <WinnerGrid
                     winners={winners}
+                    rollingCandidates={rollingCandidates}
                     drawCount={drawCount}
                     slotStart={effectiveSlotStart}
                     mode={mode}

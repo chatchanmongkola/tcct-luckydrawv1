@@ -9,8 +9,8 @@ import { uploadCampaignBanner } from "@/lib/banner-upload";
 
 type ParticipantRow = {
     employee_id: string;
-    name: string;
-    mobile: string;
+    name: string | null;
+    mobile: string | null;
 };
 
 type PrizeTierRow = {
@@ -31,14 +31,28 @@ function parseCsv(text: string): ParticipantRow[] {
     const headers = lines[0]
         .split(",")
         .map((item) => item.trim().toLowerCase());
-    if (headers.join(",") !== "employee_id,name,mobile") {
-        throw new Error("CSV header must be employee_id,name,mobile");
+    
+    // Validate header: must start with 'id' and optional 'name', 'mobile' in order
+    if (headers.length === 0 || headers[0] !== "id") {
+        throw new Error("CSV header must start with 'id' (required). Optional: name, mobile");
+    }
+
+    const validHeaders = ["id", "name", "mobile"];
+    for (let i = 0; i < headers.length; i++) {
+        if (headers[i] !== validHeaders[i]) {
+            throw new Error("CSV header columns must be in order: id, [name], [mobile]");
+        }
     }
 
     return lines.slice(1).map((line) => {
-        const [employee_id, name, mobile] = line
+        const fields = line
             .split(",")
             .map((item) => item.trim());
+        
+        const employee_id = fields[0];
+        const name = fields.length > 1 && fields[1] ? fields[1] : null;
+        const mobile = fields.length > 2 && fields[2] ? fields[2] : null;
+        
         return {
             employee_id,
             name,
@@ -394,8 +408,7 @@ export default function NewCampaignPage() {
                         <span className="font-bold">Participants</span>
                     </h2>
                     <p className="text-xs text-slate-500">
-                        Upload a CSV file. Required columns: employee_id, name,
-                        mobile
+                        Upload a CSV file. Required: id. Optional: name, mobile
                     </p>
                 </div>
                 {!participantFileName ? (
@@ -405,7 +418,7 @@ export default function NewCampaignPage() {
                             Upload CSV
                         </span>
                         <span className="text-xs text-slate-500">
-                            header: employee_id,name,mobile
+                            header: id[,name][,mobile]
                         </span>
                         <input
                             type="file"

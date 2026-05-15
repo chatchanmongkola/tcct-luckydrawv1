@@ -35,8 +35,8 @@ type DrawOverview = {
 type DrawWinner = {
     participantId: string;
     employeeId: string;
-    name: string;
-    mobile: string;
+    name: string | null;
+    mobile: string | null;
 };
 
 type DrawResponse = {
@@ -86,6 +86,9 @@ export function DrawClient({
         "ready" | "drawing" | "result" | "complete"
     >("ready");
     const [winners, setWinners] = useState<DrawWinner[]>([]);
+    const [rollingCandidates, setRollingCandidates] = useState<DrawWinner[]>(
+        [],
+    );
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -224,6 +227,7 @@ export function DrawClient({
         setError(null);
         setMode("drawing");
         setWinners([]);
+        setRollingCandidates([]);
         setHasShownAllWinners(false);
         setCurrentBatchSlotStart(selectedTier.wonCount + 1);
 
@@ -250,6 +254,8 @@ export function DrawClient({
                 );
             }
 
+            setRollingCandidates(payload.data.winners);
+
             const elapsed = Date.now() - drawStartedAt;
             const minAnimation = 1800;
             if (elapsed < minAnimation) {
@@ -259,11 +265,13 @@ export function DrawClient({
             }
 
             setWinners(payload.data.winners);
+            setRollingCandidates([]);
             setMode(payload.data.remaining === 0 ? "complete" : "result");
             setLastAudit(payload.data.audit);
             await loadState();
         } catch (err) {
             setError(err instanceof Error ? err.message : "Draw failed.");
+            setRollingCandidates([]);
             setCurrentBatchSlotStart(null);
             setMode("ready");
         } finally {
@@ -291,6 +299,7 @@ export function DrawClient({
             }
 
             setWinners(payload.data);
+            setRollingCandidates([]);
             setMode("complete");
             setHasShownAllWinners(true);
             setCurrentBatchSlotStart(1);
@@ -319,13 +328,15 @@ export function DrawClient({
             eventTitle,
             selectedTier.tierName,
             winner.employeeId,
-            winner.name,
-            winner.mobile,
+            winner.name ?? "",
+            winner.mobile ?? "",
             exportedAtIso,
         ]);
         const csvContent = [header, ...rows]
             .map((row) =>
-                row.map((value) => `"${value.replace(/"/g, '""')}"`).join(","),
+                row
+                    .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+                    .join(","),
             )
             .join("\n");
 
@@ -406,7 +417,9 @@ export function DrawClient({
 
             ctx.font = "500 20px ui-sans-serif, system-ui, -apple-system";
             ctx.fillStyle = "#dbeafe";
-            ctx.fillText(winner.name, x + 16, y + 85);
+            if (winner.name) {
+                ctx.fillText(winner.name, x + 16, y + 85);
+            }
         });
 
         const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
@@ -441,8 +454,18 @@ export function DrawClient({
                 </header>
             ) : null}
 
-            <main className="mx-auto mt-5 w-full max-w-6xl space-y-4 px-4">
-                <section className="flex justify-end">
+            <main
+                className={`mx-auto w-full max-w-6xl space-y-4 px-4 ${hasBanner ? "mt-5" : "pt-2"}`}
+            >
+                <section className="flex items-center justify-between gap-3">
+                    {!hasBanner ? (
+                        <h1 className="truncate text-lg font-bold text-slate-900 sm:text-xl">
+                            {overview?.campaign.title ?? "Lucky Draw Event"}
+                        </h1>
+                    ) : (
+                        <div />
+                    )}
+
                     <button
                         type="button"
                         onClick={() => {
@@ -490,6 +513,7 @@ export function DrawClient({
                             mode={mode}
                             isSubmitting={isSubmitting}
                             winners={winners}
+                            rollingCandidates={rollingCandidates}
                             slotStart={slotStart}
                             error={error}
                             hasShownAllWinners={hasShownAllWinners}
@@ -499,7 +523,7 @@ export function DrawClient({
                             onExportJpg={() => void exportWinnersJpg()}
                         />
 
-                        {lastAudit ? (
+                        {/* {lastAudit ? (
                             <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                                 <h3 className="text-sm font-bold text-slate-900">
                                     Last Draw Audit
@@ -539,7 +563,7 @@ export function DrawClient({
                                     </p>
                                 </div>
                             </section>
-                        ) : null}
+                        ) : null} */}
                     </>
                 )}
             </main>

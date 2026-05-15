@@ -7,8 +7,8 @@ import { useCallback, useEffect, useState } from "react";
 type Winner = {
     participantId: string;
     employeeId: string;
-    name: string;
-    mobile: string;
+    name: string | null;
+    mobile: string | null;
     drawnAt: string;
     drawSessionId: string;
     nonce: string;
@@ -341,7 +341,9 @@ export function HistoryClient({
 
                 ctx.fillStyle = "#334155";
                 ctx.font = "500 13px ui-sans-serif, system-ui, -apple-system";
-                ctx.fillText(winner.name, x + 8, y + 52);
+                if (winner.name) {
+                    ctx.fillText(winner.name, x + 8, y + 52);
+                }
             });
 
             const rows = Math.max(1, Math.ceil(tier.winners.length / columns));

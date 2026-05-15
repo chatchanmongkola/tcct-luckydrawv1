@@ -48,8 +48,8 @@ export type DrawOverview = {
 export type DrawWinner = {
     participantId: string;
     employeeId: string;
-    name: string;
-    mobile: string;
+    name: string | null;
+    mobile: string | null;
 };
 
 export type ExecuteDrawResult = {

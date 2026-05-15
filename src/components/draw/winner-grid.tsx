@@ -5,12 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 type DrawWinner = {
     participantId: string;
     employeeId: string;
-    name: string;
-    mobile: string;
+    name: string | null;
+    mobile: string | null;
 };
 
 type WinnerGridProps = {
     winners: DrawWinner[];
+    rollingCandidates: DrawWinner[];
     drawCount: number;
     slotStart: number;
     mode: "ready" | "drawing" | "result" | "complete";
@@ -23,6 +24,7 @@ function randomEmployeeId() {
 
 export function WinnerGrid({
     winners,
+    rollingCandidates,
     drawCount,
     slotStart,
     mode,
@@ -48,10 +50,26 @@ export function WinnerGrid({
 
     const display = useMemo(() => {
         if (mode === "drawing") {
+            if (rollingCandidates.length > 0) {
+                return Array.from({ length: drawCount }, (_, index) => {
+                    const candidate =
+                        rollingCandidates[
+                            Math.floor(Math.random() * rollingCandidates.length)
+                        ];
+
+                    return {
+                        participantId: `rolling-${index}-${candidate.participantId}`,
+                        employeeId: candidate.employeeId,
+                        name: candidate.name,
+                        mobile: candidate.mobile,
+                    };
+                });
+            }
+
             return rollingIds.map((employeeId, index) => ({
                 participantId: `rolling-${index}`,
                 employeeId,
-                name: "...",
+                name: "---",
                 mobile: "",
             }));
         }
@@ -64,7 +82,7 @@ export function WinnerGrid({
             name: "Waiting",
             mobile: "",
         }));
-    }, [drawCount, mode, rollingIds, winners]);
+    }, [drawCount, mode, rollingCandidates, rollingIds, winners]);
 
     return (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">

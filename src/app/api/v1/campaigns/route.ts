@@ -22,6 +22,7 @@ export async function POST(request: Request) {
         const parsed = createCampaignSchema.safeParse(json);
 
         if (!parsed.success) {
+            console.error("Validation errors:", parsed.error.format());
             return fail("Invalid input.", "VALIDATION_ERROR", {
                 status: 400,
             });
@@ -45,7 +46,12 @@ export async function POST(request: Request) {
 
         return ok(campaign, { status: 201 });
     } catch (error) {
-        console.error("Failed to create campaign", error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        console.error("❌ Failed to create campaign");
+        console.error("Error:", errorMsg);
+        if (errorStack) console.error("Stack:", errorStack);
+        console.error("Full error:", JSON.stringify(error, null, 2));
         return fail("Failed to create event.", "CAMPAIGN_CREATE_FAILED", {
             status: 500,
         });

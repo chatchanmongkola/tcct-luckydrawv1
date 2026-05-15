@@ -6,9 +6,12 @@ export const loginSchema = z.object({
 });
 
 export const participantImportSchema = z.object({
-    employee_id: z.string().min(1, "Please enter employee_id."),
-    name: z.string().min(1, "Please enter participant name."),
-    mobile: z.string().min(8, "Please enter a valid mobile number."),
+    employee_id: z.string().min(1, "Employee ID is required."),
+    name: z.string().nullish().transform(val => val?.trim() || null),
+    mobile: z.string().nullish().transform(val => {
+        const trimmed = val?.trim();
+        return trimmed && trimmed.length >= 8 ? trimmed : null;
+    }),
 });
 
 export const prizeTierSchema = z.object({

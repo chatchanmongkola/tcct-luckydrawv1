@@ -255,7 +255,7 @@ export function UsersClient() {
                                 onClick={() =>
                                     setPassword(generateClientPassword(8))
                                 }
-                                className="rounded-[6px] border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                className="flex-shrink-0 whitespace-nowrap rounded-[6px] border border-slate-300 bg-white px-5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                             >
                                 Auto gen 8
                             </button>
