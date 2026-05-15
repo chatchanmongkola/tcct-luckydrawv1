@@ -31,28 +31,30 @@ function parseCsv(text: string): ParticipantRow[] {
     const headers = lines[0]
         .split(",")
         .map((item) => item.trim().toLowerCase());
-    
+
     // Validate header: must start with 'id' and optional 'name', 'mobile' in order
     if (headers.length === 0 || headers[0] !== "id") {
-        throw new Error("CSV header must start with 'id' (required). Optional: name, mobile");
+        throw new Error(
+            "CSV header must start with 'id' (required). Optional: name, mobile",
+        );
     }
 
     const validHeaders = ["id", "name", "mobile"];
     for (let i = 0; i < headers.length; i++) {
         if (headers[i] !== validHeaders[i]) {
-            throw new Error("CSV header columns must be in order: id, [name], [mobile]");
+            throw new Error(
+                "CSV header columns must be in order: id, [name], [mobile]",
+            );
         }
     }
 
     return lines.slice(1).map((line) => {
-        const fields = line
-            .split(",")
-            .map((item) => item.trim());
-        
+        const fields = line.split(",").map((item) => item.trim());
+
         const employee_id = fields[0];
         const name = fields.length > 1 && fields[1] ? fields[1] : null;
         const mobile = fields.length > 2 && fields[2] ? fields[2] : null;
-        
+
         return {
             employee_id,
             name,
